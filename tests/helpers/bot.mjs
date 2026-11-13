@@ -26,7 +26,7 @@ const TOOL_JOBS = { axe: 'woodcutter', knife: 'trapper', spear: 'hunter', waters
 /** Things to build and make, most wanted first. */
 const PROJECTS = [
   'build-leanto', 'make-axe', 'make-knife', 'build-snares', 'build-rack', 'build-raincatcher', 'build-shed',
-  'build-workbench', 'make-pot', 'make-spear', 'build-garden', 'build-cabin', 'make-waterskin', 'make-coat',
+  'build-workbench', 'make-pot', 'make-spear', 'build-garden', 'build-cabin', 'build-bunkhouse', 'make-waterskin', 'make-coat',
   'make-pack', 'build-smokehouse', 'build-palisade', 'build-watchtower', 'build-radio',
 ];
 

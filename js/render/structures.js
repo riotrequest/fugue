@@ -82,6 +82,37 @@ function drawCabin() {
   return s;
 }
 
+function drawBunkhouse() {
+  // Three rows of headroom above the roof for the stovepipe.
+  const top = 3;
+  const s = new Surface(44, 29);
+  for (let y = 0; y < 10; y++) {
+    const inset = Math.round((9 - y) * 0.6);
+    for (let x = inset; x < 44 - inset; x++) {
+      const seam = x % 5 === 0 || y === 9;
+      s.set(x, top + y, seam ? MAT.BARK_D : MAT.BARK, 16, snowAt(x, y, ROOF_SNOW + y * 5));
+    }
+  }
+  s.rect(5, top, 34, 1, MAT.WOOD_L, 10, ROOF_SNOW);
+  s.rect(33, 0, 2, top + 3, MAT.METAL_D, 8);
+  for (let y = top + 10; y < 29; y++) {
+    const course = (y - top - 10) % 3;
+    const mat = y === top + 10 ? MAT.WOOD_D : course === 0 ? MAT.WOOD_L : course === 1 ? MAT.WOOD : MAT.WOOD_D;
+    s.rect(2, y, 40, 1, mat);
+    if (course === 1) {
+      s.set(1, y, MAT.WOOD_END);
+      s.set(42, y, MAT.WOOD_END);
+    }
+  }
+  s.rect(19, top + 15, 7, 11, MAT.WOOD_D);
+  s.rect(20, top + 16, 5, 10, MAT.INTERIOR, 40);
+  for (const x of [6, 32]) {
+    s.rect(x, top + 13, 6, 5, MAT.WOOD_D);
+    s.rect(x + 1, top + 14, 4, 3, MAT.WINDOW);
+  }
+  return s;
+}
+
 function drawLeanto() {
   const s = new Surface(32, 22);
   for (let x = 2; x <= 27; x++) {
@@ -283,6 +314,7 @@ function drawRadio() {
 /** @type {Record<string, Spot>} */
 const SPOTS = {
   cabin: { x: 66, y: 86, draw: drawCabin, shade: 2 },
+  bunkhouse: { x: 160, y: 66, draw: drawBunkhouse, shade: 2 },
   smokehouse: { x: 110, y: 72, draw: drawSmokehouse, shade: 3 },
   workbench: { x: 208, y: 78, draw: drawWorkbench, shade: 2 },
   watchtower: { x: 250, y: 88, draw: drawWatchtower, shade: 4 },

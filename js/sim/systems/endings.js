@@ -3,7 +3,7 @@ import { ENDING_BY_ID } from '../content/endings.js';
 import { meets } from './conditions.js';
 import { log, sfx } from './journal.js';
 
-const COUNT_WORDS = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const COUNT_WORDS = ['none', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen'];
 
 /**
  * Closes the game with the given ending. The text is chosen now, from the state

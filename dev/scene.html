@@ -31,13 +31,13 @@
 <script type="module">
 import { createScene } from '../js/render/scene.js';
 
-const STRUCTURES = ['leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden', 'cabin', 'palisade', 'smokehouse', 'watchtower', 'radio'];
+const STRUCTURES = ['leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden', 'cabin', 'bunkhouse', 'palisade', 'smokehouse', 'watchtower', 'radio'];
 const PULSES = ['stoke', 'arrive', 'danger', 'memory', 'build'];
 const WEATHERS = ['clear', 'rain', 'snow', 'fog', 'ash'];
 const PLAYER_POSES = ['sitting', 'asleep', 'tending', 'away'];
 const PEOPLE_POSES = ['mixed', 'sitting', 'sleeping', 'standing', 'working', 'away'];
-const MIXED = ['sitting', 'sleeping', 'sitting', 'standing', 'working', 'sitting', 'sleeping', 'working'];
-const SEEDS = [1187, 20231, 5, 90412, 7741, 313, 68000, 4242];
+const MIXED = ['sitting', 'sleeping', 'sitting', 'standing', 'working', 'sitting', 'sleeping', 'working', 'sitting', 'working', 'standing', 'sitting'];
+const SEEDS = [1187, 20231, 5, 90412, 7741, 313, 68000, 4242, 3301, 51515, 909, 27182];
 const SLIDERS = ['time', 'fire', 'weatherIntensity', 'wind', 'cold', 'wood', 'threat'];
 /** Seconds for one full day when the auto cycle is on. */
 const DAY_SECONDS = 60;
@@ -95,7 +95,7 @@ for (const key of SLIDERS) slider(key, () => view[key], (v) => { view[key] = v; 
 slider('day', () => view.day, (v) => { view.day = v; }, 60, 1);
 select('weather', WEATHERS, () => view.weather, (v) => { view.weather = v; });
 select('player', PLAYER_POSES, () => view.player, (v) => { view.player = v; });
-slider('people', () => harness.peopleCount, (v) => { harness.peopleCount = v; syncPeople(); }, 8, 1);
+slider('people', () => harness.peopleCount, (v) => { harness.peopleCount = v; syncPeople(); }, 12, 1);
 select('people pose', PEOPLE_POSES, () => harness.peoplePose, (v) => { harness.peoplePose = v; syncPeople(); });
 
 const structureBox = el('fieldset', {}, el('legend', { textContent: 'structures' }));

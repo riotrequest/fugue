@@ -202,7 +202,7 @@ const SEAT_RING = { rx: 40, ry: 20 };
 /** Sleepers lie a little further out than the sitters, so bedrolls clear the ring. */
 const BEDROLL_OFFSET = 0.2;
 /** Seat angles in degrees, clockwise from screen-right. Nobody sits directly behind the flames. */
-const SEAT_ANGLES = [20, 135, 252, 60, 288, 178, 328, 220];
+const SEAT_ANGLES = [20, 135, 252, 60, 288, 178, 328, 220, 40, 156, 199, 354];
 const PLAYER_ANGLE = 97;
 const PLAYER_KEY = 'player';
 const PLAYER_SEED = 0x504c5952;
@@ -212,6 +212,7 @@ const MAX_PEOPLE = SEAT_ANGLES.length;
 /** Where each seat's occupant goes to work, near the camp's structures. */
 const WORK_SPOTS = [
   [206, 85], [102, 141], [114, 79], [229, 127], [190, 84], [70, 93], [246, 152], [62, 150],
+  [160, 70], [214, 160], [48, 122], [240, 94],
 ];
 const TEND_SPOT = [146, 112];
 /** The gap in the treeline (and the palisade gate) people come and go through. */

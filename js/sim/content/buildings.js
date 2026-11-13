@@ -102,6 +102,16 @@ export const BUILDINGS = [
     caps: { wood: 20 },
   },
   {
+    id: 'bunkhouse',
+    label: 'raise a bunkhouse',
+    hint: 'bunks for four more; the camp can grow no bigger',
+    cost: { wood: 45, stone: 10, fiber: 8, hide: 4 },
+    when: { built: ['cabin'] },
+    done: 'A long low house of logs with a bark roof, bunks two high down both walls. It smells of pine sap and wet wool.',
+    beds: 4,
+    warmth: 0.05,
+  },
+  {
     id: 'palisade',
     label: 'drive a palisade',
     hint: 'sharpened stakes between you and the trees',

@@ -24,7 +24,7 @@ import { EFFECT_NAMES } from '../js/sim/systems/effects.js';
 const EVENTS = Object.values(EVENT_BY_ID);
 const STRUCTURE_IDS = [
   'leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden',
-  'cabin', 'palisade', 'smokehouse', 'watchtower', 'radio',
+  'cabin', 'bunkhouse', 'palisade', 'smokehouse', 'watchtower', 'radio',
 ];
 
 const isResource = (id) => id in RESOURCE_BY_ID;

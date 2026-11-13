@@ -10,7 +10,7 @@ const SFX = [
 ];
 const STRUCTURES = [
   'leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden',
-  'cabin', 'palisade', 'smokehouse', 'watchtower', 'radio',
+  'cabin', 'bunkhouse', 'palisade', 'smokehouse', 'watchtower', 'radio',
 ];
 const ACTION_GROUPS = ['fire', 'forage', 'make', 'build', 'venture', 'self'];
 
