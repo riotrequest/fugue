@@ -22,6 +22,8 @@ import { listActions, perform } from './systems/actions.js';
 import { choose, describeEvent } from './systems/events.js';
 import { assign } from './systems/people.js';
 import { continueAfterEnding } from './systems/endings.js';
+import { notebookView, study } from './systems/research.js';
+import { aimsView } from './systems/aims.js';
 import * as views from './views.js';
 
 export { SAVE_VERSION };
@@ -91,6 +93,12 @@ export function createGame({ save = null, seed = Date.now(), difficulty = 'norma
     resources: () => views.resources(state),
     people: () => views.people(state),
     memories: () => views.memories(state),
+    /** The notebook, once found: projects known, and which is being worked on. */
+    notebook: () => notebookView(state),
+    /** The camp's long-term aims, achieved or not. */
+    aims: () => aimsView(state),
+    /** The settlement's chronicle and its dead. */
+    history: () => views.history(state),
 
     /** Chooses the difficulty of a game that has not begun yet. */
     setDifficulty(id) {
@@ -103,6 +111,8 @@ export function createGame({ save = null, seed = Date.now(), difficulty = 'norma
     actions: () => listActions(state),
     perform: (actionId) => perform(sim, actionId),
     assign: (roleId, delta) => assign(sim, roleId, delta),
+    /** Sets the notebook to a project. @returns {boolean} */
+    study: (projectId) => study(sim, projectId),
 
     event: () => describeEvent(state),
     /** After an ending that allows it, carry on playing from where the camp stood. */

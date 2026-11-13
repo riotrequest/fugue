@@ -13,7 +13,7 @@ export function createPause({ isPaused, canPause, onPauseToggle }) {
   const resume = byId('pause-resume');
   const button = byId('btn-pause');
   /** Everything under the veil. Made inert rather than hidden, so an open card survives the pause. */
-  const covered = [byId('app'), byId('event'), byId('journal'), byId('help')];
+  const covered = [byId('app'), byId('event'), byId('journal'), byId('help'), byId('survivor'), byId('notebook')];
 
   let shown = false;
 

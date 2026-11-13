@@ -3,6 +3,7 @@ import { fill } from '../util.js';
 import { VENTURE_COOLDOWN } from '../content/actions.js';
 import { EXPEDITION_LINES } from '../content/lines.js';
 import { LOCATION_BY_ID } from '../content/locations.js';
+import { EVENT_BY_ID } from '../content/events.js';
 import { RESOURCE_BY_ID } from '../content/resources.js';
 import { add, bonus } from './camp.js';
 import { meets } from './conditions.js';
@@ -17,11 +18,12 @@ import { openEvent } from './modal.js';
  * @typedef {import('./journal.js').Sim} Sim
  */
 
-/** Least recently met encounters first, in random order among equals. */
+/** Least recently met encounters first, in random order among equals. Some only happen in their season. */
 function drawEncounters(sim, location) {
   const { seen } = sim.state;
+  const fitting = location.encounters.filter((id) => meets(sim.state, EVENT_BY_ID[id].when));
   return sim.rng
-    .shuffle(location.encounters)
+    .shuffle(fitting)
     .sort((a, b) => (seen[a] ?? -1) - (seen[b] ?? -1))
     .slice(0, EXPEDITION.encounters);
 }
@@ -34,9 +36,14 @@ export function setOut(sim, locationId) {
     ({ memory, when }) => !state.memories.includes(memory) && meets(state, when),
   );
 
+  // An errand someone at the fire asked of you joins the trip, about them.
+  const errands = (location.requests ?? [])
+    .filter(({ chain, when }) => state.chains?.[chain] && !state.chains[chain].done && meets(state, when))
+    .map(({ event, chain }) => ({ id: event, ctx: { ...state.chains[chain].ctx } }));
+
   state.expedition = {
     location: locationId,
-    queue: [...drawEncounters(sim, location), ...(scene ? [scene.event] : [])],
+    queue: [...drawEncounters(sim, location), ...errands, ...(scene ? [scene.event] : [])],
     bag: {},
   };
   state.visits[locationId] = (state.visits[locationId] ?? 0) + 1;
@@ -62,7 +69,8 @@ function describeBag(bag) {
 export function proceed(sim) {
   const { expedition } = sim.state;
   const next = expedition.queue.shift();
-  if (next) openEvent(sim, next);
+  if (typeof next === 'object' && next) openEvent(sim, next.id, next.ctx);
+  else if (next) openEvent(sim, next);
   else openEvent(sim, 'way-back', { haul: describeBag(expedition.bag) });
 }
 

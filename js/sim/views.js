@@ -1,4 +1,4 @@
-import { VITALS } from './tuning.js';
+import { TIME, VITALS } from './tuning.js';
 import { paragraphs } from './util.js';
 import { MEMORIES } from './content/memories.js';
 import { RESOURCES, RESOURCE_GROUP_BY_ID } from './content/resources.js';
@@ -8,7 +8,9 @@ import { FIRE_STATES, VITAL_DEFS } from './content/vitals.js';
 import { amount, bedsOf, capOf } from './systems/camp.js';
 import { meets } from './systems/conditions.js';
 import { bandOf, exposureOf, intensityOf } from './systems/fire.js';
-import { countIn, knownTraitOf, poseOf, roomIn } from './systems/people.js';
+import { countIn, knownTraitOf, poseOf, roomIn, trustLabelOf, trustOf } from './systems/people.js';
+import { arcNoteOf } from './systems/chains.js';
+import { historyView } from './systems/history.js';
 import { canContinue } from './systems/endings.js';
 import { dialOf } from './systems/difficulty.js';
 import { coldOf, isAway, phaseOf, seasonOf } from './systems/time.js';
@@ -170,8 +172,49 @@ export function people(state) {
       const trait = knownTraitOf(person);
       return trait ? `${person.name} (${trait})` : person.name;
     }),
+    members: state.people.map((person) => memberOf(state, person)),
   };
 }
+
+const ROLE_LABEL = Object.fromEntries(ROLES.map((role) => [role.id, role.label]));
+const BOND_WORD = { friend: 'friend', rival: 'at odds with', partner: 'partner' };
+
+/**
+ * One survivor, for the card that opens from their name.
+ * @typedef {object} MemberView
+ * @property {number} id
+ * @property {string} name
+ * @property {string|null} trait     once the camp has noticed it
+ * @property {string} role           job label, or 'resting' / 'laid up'
+ * @property {number} health         0..1
+ * @property {boolean} sick
+ * @property {number} trust          0..1
+ * @property {string} trustLabel     'devoted' | 'loyal' | 'steady' | 'wary' | 'bitter'
+ * @property {{ name: string, kind: string, word: string }[]} bonds
+ * @property {string|null} story     their own story, if they have one
+ * @property {number} sinceDay       the day they came
+ */
+function memberOf(state, person) {
+  const byId = Object.fromEntries(state.people.map((other) => [other.id, other]));
+  return {
+    id: person.id,
+    name: person.name,
+    trait: knownTraitOf(person) ?? null,
+    role: person.sick ? 'laid up' : person.role ? ROLE_LABEL[person.role] ?? person.role : 'resting',
+    health: person.health,
+    sick: person.sick,
+    trust: trustOf(person),
+    trustLabel: trustLabelOf(person),
+    bonds: Object.entries(person.bonds ?? {})
+      .filter(([id]) => byId[id])
+      .map(([id, kind]) => ({ name: byId[id].name, kind, word: BOND_WORD[kind] ?? kind })),
+    story: arcNoteOf(state, person),
+    sinceDay: 1 + Math.floor((person.since ?? 0) / TIME.daySeconds + TIME.startTime),
+  };
+}
+
+/** The settlement's memory, for the journal. */
+export const history = (state) => historyView(state);
 
 /** @param {GameState} state @returns {MemoryView[]} in story order */
 export function memories(state) {
@@ -196,8 +239,9 @@ export function scene(state) {
     time: state.clock.time,
     day: state.clock.day,
     fire: intensityOf(state),
-    weather: state.weather.id,
-    weatherIntensity: state.weather.intensity,
+    // Heat looks like a clear day, a storm like the heaviest rain.
+    weather: weatherOf(state).looks ?? state.weather.id,
+    weatherIntensity: state.weather.id === 'storm' ? Math.min(1, 0.4 + state.weather.intensity) : state.weather.intensity,
     wind: state.weather.wind,
     cold: coldOf(state),
     wood: amount(state, 'wood') / capOf(state, 'wood'),

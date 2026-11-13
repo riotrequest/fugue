@@ -16,6 +16,38 @@ import { indexById } from '../util.js';
 /** @type {EndingDef[]} */
 export const ENDINGS = [
   {
+    id: 'settled',
+    title: 'Cadence',
+    death: false,
+    afterword: 'Another spring. The fire is the camp’s now, not yours. You feed it anyway.',
+    variants: [
+      {
+        when: { aimsMin: 8, popMin: 8 },
+        text: [
+          'The second thaw comes in the night, like the first. In the morning there are {count} of you at the fire, and a school, and a well, and graves you tend, and a notebook full of everything you have worked out together.',
+          'Somebody has started calling the place by a name. You are not sure who began it. It is a good name.',
+          'You still do not remember all of who you were before. You have stopped expecting to. You know who you are here.',
+          'You put a log on. It catches. Somebody else puts on the next one.',
+        ],
+      },
+      {
+        when: { popMin: 4 },
+        text: [
+          'The second thaw comes in the night, like the first. In the morning there are {count} of you, which is not as many as there might have been, and more than there were.',
+          'The camp has walls now, and habits, and quarrels that are a year old and comfortable as boots. It is not safe. Nothing is. But it is somewhere.',
+          'You put a log on. It catches.',
+        ],
+      },
+      {
+        text: [
+          'The second thaw comes, and finds the fire still burning, and not many left to sit at it.',
+          'You lived through two winters. Some of them did not. You carry their names in the notebook, at the back, where you will not have to look at them every day, and do.',
+          'You put a log on. It catches.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'beacon',
     title: 'A New Subject',
     death: false,

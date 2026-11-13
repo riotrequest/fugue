@@ -1,17 +1,18 @@
-import { PEOPLE } from '../tuning.js';
+import { BONDS, PEOPLE, TRUST } from '../tuning.js';
 import { clamp01, fill } from '../util.js';
 import { PEOPLE_LINES } from '../content/lines.js';
 import { RESOURCE_BY_ID } from '../content/resources.js';
 import { ROLE_BY_ID } from '../content/roles.js';
 import { NAMES } from '../content/story.js';
 import { MADE_OFF_LINES, THEFT_LINES, TRAITS, TRAIT_BY_ID } from '../content/traits.js';
-import { accrue, amount, remove } from './camp.js';
+import { accrue, amount, bonus, remove } from './camp.js';
 import { meets } from './conditions.js';
 import { dialOf } from './difficulty.js';
 import { due, log, vary } from './journal.js';
 import { openEvent } from './modal.js';
 import { isAway } from './time.js';
 import { comfortOf } from './vitals.js';
+import { chronicle, recordDeath, recordGone } from './history.js';
 
 /**
  * The survivors: who is at the fire, what they are set to do, and what it costs
@@ -35,8 +36,43 @@ export function roomIn(state, role) {
 /** Saves from before traits existed: everyone there is steady. */
 export const traitOf = (person) => TRAIT_BY_ID[person.trait] ?? TRAIT_BY_ID.steady;
 
-/** How fast someone works, 1 being ordinary. */
-export const paceOf = (person) => traitOf(person).pace;
+/** How far someone trusts you, 0..1. Saves from before trust existed start everyone even. */
+export const trustOf = (person) => person.trust ?? TRUST.start;
+
+/** 'devoted' | 'loyal' | 'steady' | 'wary' | 'bitter': how trust reads on the survivor card. */
+export function trustLabelOf(person) {
+  const trust = trustOf(person);
+  if (trust >= 0.9) return 'devoted';
+  if (trust >= TRUST.loyal) return 'loyal';
+  if (trust >= TRUST.wary) return 'steady';
+  return trust >= 0.1 ? 'wary' : 'bitter';
+}
+
+/** Moves someone's trust in you. */
+export function adjustTrust(person, delta) {
+  person.trust = clamp01(trustOf(person) + delta);
+}
+
+/** How fast someone works, 1 being ordinary. Someone loyal puts a little more in. */
+export const paceOf = (person) => traitOf(person).pace + (trustOf(person) >= TRUST.loyal ? TRUST.loyalPace : 0);
+
+/** Makes (or with null, breaks) a bond between two people. */
+export function setBond(a, b, kind) {
+  if (!a || !b || a === b) return;
+  a.bonds ??= {};
+  b.bonds ??= {};
+  if (kind) {
+    a.bonds[b.id] = kind;
+    b.bonds[a.id] = kind;
+  } else {
+    delete a.bonds[b.id];
+    delete b.bonds[a.id];
+  }
+}
+
+/** The people someone is close to (friends and partners) who are still at the fire. */
+export const closeTo = (state, person) =>
+  state.people.filter((other) => ['friend', 'partner'].includes(person.bonds?.[other.id]));
 
 /** What the camp knows someone to be, or '' while it does not. */
 export const knownTraitOf = (person) => (person.noticed ? traitOf(person).label : '');
@@ -67,6 +103,8 @@ export function addPerson(sim, name, health = 1) {
     since: state.elapsed,
     noticed: false,
     thefts: 0,
+    trust: TRUST.start,
+    bonds: {},
   };
   state.people.push(person);
   state.namesUsed.push(name);
@@ -74,8 +112,29 @@ export function addPerson(sim, name, health = 1) {
   return person;
 }
 
-function removePerson(state, person) {
+/**
+ * Takes someone off the camp's books, and lets those close to them feel it.
+ * @param {'died'|'left'|'exiled'} how
+ */
+function removePerson(sim, person, how) {
+  const { state } = sim;
   state.people.splice(state.people.indexOf(person), 1);
+  for (const other of state.people.slice()) {
+    const bond = other.bonds?.[person.id];
+    if (!bond) continue;
+    delete other.bonds[person.id];
+    if (bond === 'rival') continue;
+    // Grief costs health; losing someone to your decision, or your neglect, costs trust as well.
+    // A place to remember the dead softens it.
+    const grief = TRUST.grief * (1 - Math.min(0.8, bonus(state, 'solace')));
+    if (how === 'died') {
+      adjustTrust(other, -grief / 2);
+      if (bond === 'partner') log(sim, `${other.name} does not speak for the rest of the day.`, 'warn');
+      changeHealth(sim, other, -0.05);
+    } else if (how === 'exiled') {
+      adjustTrust(other, -grief);
+    }
+  }
 }
 
 /**
@@ -126,12 +185,52 @@ function carryOff(state, haul) {
  */
 export function depart(sim, person, exiled = false) {
   const { state, rng } = sim;
-  removePerson(state, person);
+  if (!state.people.includes(person)) return;
+  const partner = state.people.find((other) => person.bonds?.[other.id] === 'partner');
+  removePerson(sim, person, exiled ? 'exiled' : 'left');
+  recordGone(state, person, exiled);
   const madeOff = traitOf(person).steals && rng.chance(exiled ? PEOPLE.exiledMadeOff : PEOPLE.madeOff);
   const took = madeOff ? carryOff(state, lootFor(state, rng.int(...PEOPLE.madeOffAmount))) : '';
   if (took) log(sim, fill(vary(sim, MADE_OFF_LINES), { name: person.name, took }), 'danger');
   else say(sim, exiled ? 'exiled' : 'left', person, 'warn');
   vacate(sim, person.role);
+  // Someone who loves them may go too.
+  if (partner && state.people.includes(partner) && rng.chance(BONDS.follow)) {
+    log(sim, `${partner.name} gathers their things and goes after ${person.name}.`, 'warn');
+    removePerson(sim, partner, 'left');
+    recordGone(state, partner, false);
+    vacate(sim, partner.role);
+  }
+}
+
+/**
+ * Someone who once walked out comes back to the fire.
+ * @param {string} entryId  the id they had, as kept in the history
+ * @returns {Person|null}
+ */
+export function rejoin(sim, entryId) {
+  const { state } = sim;
+  const entry = state.history?.gone.find((gone) => gone.id === entryId && !gone.returned);
+  if (!entry) return null;
+  entry.returned = true;
+  const person = {
+    id: entry.id,
+    name: entry.name,
+    trait: entry.trait,
+    seed: entry.seed,
+    since: state.elapsed,
+    role: null,
+    health: 0.6,
+    sick: false,
+    forgiven: false,
+    noticed: true,
+    thefts: 0,
+    trust: clamp01(entry.trust + 0.25),
+    bonds: {},
+  };
+  state.people.push(person);
+  chronicle(state, `${entry.name} came back.`);
+  return person;
 }
 
 /** Let off with a warning: they steal less often after that. */
@@ -146,10 +245,12 @@ export function reform(person) {
 }
 
 /** Applies a change in health, with whatever follows from it: sickness, recovery, death. */
-export function changeHealth(sim, person, delta) {
+export function changeHealth(sim, person, delta, cause = 'sickness') {
+  if (!sim.state.people.includes(person)) return;
   person.health = clamp01(person.health + delta);
   if (person.health <= 0) {
-    removePerson(sim.state, person);
+    removePerson(sim, person, 'died');
+    recordDeath(sim.state, person, cause);
     say(sim, 'dead', person, 'danger');
     vacate(sim, person.role);
   } else if (!person.sick && person.health < PEOPLE.sickBelow) {
@@ -220,7 +321,10 @@ function upkeep(sim, person) {
   const ledger = ledgerOf(state);
   const troubles = [];
   if (serveMeal(state)) ledger.meals += 1;
-  else troubles.push(['hungry', PEOPLE.hungerHarm]);
+  else {
+    troubles.push(['hungry', PEOPLE.hungerHarm]);
+    ledger.short = (ledger.short ?? 0) + 1;
+  }
   if (amount(state, 'water') >= 1) {
     remove(state, 'water', 1);
     ledger.drinks += 1;
@@ -228,14 +332,32 @@ function upkeep(sim, person) {
   if (comfortOf(state) < PEOPLE.coldBelow) troubles.push(['cold', PEOPLE.coldHarm]);
 
   if (troubles.length === 0) {
-    changeHealth(sim, person, PEOPLE.mend);
+    // Fed, watered and warm: trust grows, faster with a friend beside them.
+    const friendly = closeTo(state, person).length > 0;
+    adjustTrust(person, TRUST.fed * (1 + (friendly ? BONDS.trust : 0) + bonus(state, 'cheer')) * (1 - trustOf(person)));
+    // Medicine known, a sick bay, and someone to run it all speed healing, the sick most of all.
+    const care = bonus(state, 'mend') + (person.sick ? countIn(state, 'medic') * PEOPLE.medicCare : 0);
+    changeHealth(sim, person, PEOPLE.mend * (1 + care) + (friendly ? BONDS.mend : 0));
     return;
   }
+  for (const [trouble] of troubles) adjustTrust(person, -TRUST[trouble]);
   const [worst] = troubles[0];
   // Raw meat feeds no one until it is cooked; say so, so the player knows a cook is missing.
   const uncooked = worst === 'hungry' && amount(state, 'meat') >= 1 && countIn(state, 'cook') === 0;
   if (due(sim, `complaint:${worst}`, PEOPLE.complaintGap)) say(sim, uncooked ? 'uncooked' : worst, person, 'warn');
-  changeHealth(sim, person, -troubles.reduce((sum, [, harm]) => sum + harm, 0));
+  const cause = CAUSE_OF[worst];
+  changeHealth(sim, person, -troubles.reduce((sum, [, harm]) => sum + harm, 0), cause);
+}
+
+const CAUSE_OF = { hungry: 'hunger', thirsty: 'thirst', cold: 'cold' };
+
+/** With nothing happening, trust drifts slowly back toward where it began. */
+function settleTrust(state, dt) {
+  const pull = Math.min(1, TRUST.settle * dt);
+  for (const person of state.people) {
+    const trust = trustOf(person);
+    person.trust = trust + (TRUST.start - trust) * pull;
+  }
 }
 
 /** After a day or so the camp works out who pulls their weight and who does not. */
@@ -292,6 +414,7 @@ export function stepPeople(sim, dt) {
     state.upkeepTurn = index + 1;
     upkeep(sim, state.people[index]);
   }
+  settleTrust(state, dt);
   noticing(sim);
   thieving(sim);
 }
@@ -308,11 +431,29 @@ function report(sim) {
   log(sim, `The camp’s day: ${brought}. ${plural(ledger.meals, 'meal')} and ${plural(ledger.drinks, 'drink')} handed out.`);
 }
 
+/** After a day when meals went short, the wary may put down their work until they are given a reason not to. */
+function refusals(sim) {
+  for (const person of sim.state.people) {
+    if (!person.role || trustOf(person) >= TRUST.refuseBelow || !sim.rng.chance(TRUST.refuseChance)) continue;
+    const { role } = person;
+    person.role = null;
+    log(sim, `${person.name} will not work another day on an empty stomach, not for you.`, 'warn');
+    vacate(sim, role);
+  }
+}
+
 /** Dawn is when the camp takes stock, and when the weakest decide whether to stay. */
 export function atDawn(sim) {
+  const hungryDay = (ledgerOf(sim.state).short ?? 0) > 0;
   report(sim);
+  if (hungryDay) refusals(sim);
   for (const person of sim.state.people.slice()) {
+    if (!sim.state.people.includes(person)) continue;
     if (person.health < PEOPLE.leaveBelow && sim.rng.chance(PEOPLE.leaveChance)) depart(sim, person);
+    else if (trustOf(person) < TRUST.leaveBelow && sim.rng.chance(TRUST.leaveChance)) {
+      log(sim, `${person.name} says they have had enough of your fire, and of you.`, 'warn');
+      depart(sim, person);
+    }
   }
 }
 

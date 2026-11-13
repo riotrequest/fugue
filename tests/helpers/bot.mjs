@@ -17,7 +17,7 @@ import { createGame } from '../../js/sim/index.js';
 /** Work wanted from each successive healthy survivor. Roles not yet available are skipped. */
 const STAFFING = [
   'tender', 'woodcutter', 'carrier', 'trapper', 'cook', 'forager',
-  'trapper', 'woodcutter', 'guard', 'trapper', 'carrier', 'guard', 'forager',
+  'trapper', 'woodcutter', 'guard', 'scholar', 'medic', 'trapper', 'carrier', 'guard', 'forager',
 ];
 
 /** Which job each work tool equips. */
@@ -28,7 +28,12 @@ const PROJECTS = [
   'build-leanto', 'make-axe', 'make-knife', 'build-snares', 'build-rack', 'build-raincatcher', 'build-shed',
   'build-workbench', 'make-pot', 'make-spear', 'build-garden', 'build-cabin', 'build-bunkhouse', 'make-waterskin', 'make-coat',
   'make-pack', 'build-smokehouse', 'build-palisade', 'build-watchtower', 'build-radio',
+  'build-cairn', 'build-well', 'build-kiln', 'build-cellar', 'build-infirmary', 'build-sauna', 'build-coldframe',
+  'build-school',
 ];
+
+/** Notebook projects, most wanted first; anything else open comes after. */
+const STUDIES = ['felling', 'snare-craft', 'preserving', 'herb-lore', 'water-finding', 'insulation', 'charcoal', 'field-medicine'];
 
 /** Where each raw material comes from, for when a project is short of it. */
 const SOURCE_OF = {
@@ -40,7 +45,10 @@ const SOURCE_OF = {
   hide: 'check-snares',
 };
 
-const DESTINATIONS = ['go-relay', 'go-hospital', 'go-suburb', 'go-highway', 'go-creek'];
+const DESTINATIONS = [
+  'go-relay', 'go-hospital', 'go-suburb', 'go-highway', 'go-creek',
+  'go-station', 'go-farm', 'go-lake', 'go-quarry', 'go-pass',
+];
 
 /** Choices the bot only takes when nothing else is on offer. */
 const RELUCTANT = new Set(['refuse', 'go', 'noise', 'ignore', 'stand', 'let', 'squeeze', 'boat', 'wait', 'leave']);
@@ -84,6 +92,15 @@ export function createBot(game, style = 'settler') {
     }
   }
 
+  /** Keeps the notebook busy: the most useful open project, or any open one. */
+  function study() {
+    const notebook = game.notebook();
+    if (!notebook || notebook.active) return;
+    const open = notebook.projects.filter((project) => project.status === 'open' && !project.reason);
+    const pick = STUDIES.map((id) => open.find((project) => project.id === id)).find(Boolean) ?? open[0];
+    if (pick) game.study(pick.id);
+  }
+
   /** Makes one move: answers the open event, or does the most pressing thing. */
   function act() {
     const event = game.event();
@@ -103,6 +120,7 @@ export function createBot(game, style = 'settler') {
 
     if (attempt('wake')) return;
     staff(people);
+    study();
 
     const staffed = (id) => (people?.roles.find((role) => role.id === id)?.count ?? 0) > 0;
     const keeper = staffed('tender');
@@ -112,6 +130,7 @@ export function createBot(game, style = 'settler') {
     if (level('water') < 0.5 && attempt('drink')) return;
     if (level('food') < 0.5 && (attempt('eat') || attempt('eat-forage'))) return;
     if (level('health') < 0.5 && attempt('treat')) return;
+    if (have('medicine') < 2 && attempt('poultice')) return;
     if (level('health') < 0.85 && attempt('rest')) return;
 
     if (style === 'seeker' && attempt('beacon')) return;
@@ -176,14 +195,17 @@ export function createBot(game, style = 'settler') {
  * @param {number} [opts.minutes]  give up after this much simulated real time
  * @param {number} [opts.step]     seconds per tick
  * @param {(game: import('../../js/sim/index.js').Game, seconds: number) => void} [opts.onTick]
+ * @param {boolean} [opts.carryOn]  keep playing after an ending that allows it (the thaw)
  * @returns {{ game: import('../../js/sim/index.js').Game, seconds: number }}
  */
-export function playthrough({ seed = 1, difficulty = 'normal', style = 'settler', minutes = 90, step = 0.25, onTick } = {}) {
+export function playthrough({ seed = 1, difficulty = 'normal', style = 'settler', minutes = 90, step = 0.25, onTick, carryOn = false } = {}) {
   const game = createGame({ seed, difficulty });
   const bot = style === 'idle' ? null : createBot(game, style);
   const ticksPerMove = Math.round(REACTION / step);
   let ticks = 0;
-  while (ticks * step < minutes * 60 && !game.status().ended) {
+  while (ticks * step < minutes * 60) {
+    // A settler who reaches the thaw may stay on into the turning year.
+    if (game.status().ended && !(carryOn && game.continueAfterEnding())) break;
     if (ticks % ticksPerMove === 0) bot?.act();
     game.tick(step);
     ticks += 1;

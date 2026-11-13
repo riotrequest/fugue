@@ -311,6 +311,162 @@ function drawRadio() {
   return s;
 }
 
+/* ---------- the notebook's buildings ---------- */
+
+/** A ring of stones with a windlass and a bucket on a rope. */
+function drawWell() {
+  const s = new Surface(18, 20);
+  s.rect(2, 2, 1, 11, MAT.WOOD_D);
+  s.rect(15, 2, 1, 11, MAT.WOOD_D);
+  s.rect(1, 1, 16, 2, MAT.WOOD, 0, FLAT_SNOW);
+  s.rect(1, 1, 16, 1, MAT.WOOD_L, 0, FLAT_SNOW);
+  s.rect(6, 4, 6, 2, MAT.WOOD_L);
+  s.rect(8, 4, 2, 2, MAT.ROPE);
+  s.rect(8, 6, 1, 5, MAT.ROPE, 8);
+  s.rect(7, 10, 3, 3, MAT.METAL_D);
+  s.rect(7, 10, 3, 1, MAT.METAL);
+  for (let y = 12; y < 20; y++) {
+    for (let x = 1; x < 17; x++) {
+      const brick = (x + (y % 2) * 2) % 4 === 0 || y === 12;
+      s.set(x, y, brick ? MAT.STONE_D : MAT.STONE, 0, y === 12 ? FLAT_SNOW : 0);
+    }
+  }
+  s.rect(3, 12, 12, 1, MAT.INTERIOR, 30);
+  return s;
+}
+
+/** A squat dome of stone and clay, smoke hole on top, a glowing mouth. */
+function drawKiln() {
+  const s = new Surface(22, 18);
+  for (let y = 0; y < 18; y++) {
+    const half = Math.round(Math.sqrt(Math.max(0, 1 - ((17 - y) / 17) ** 2)) * 10);
+    for (let x = 11 - half; x <= 10 + half; x++) {
+      const seam = (x * 3 + y * 5) % 7 === 0;
+      s.set(x, y, seam ? MAT.STONE_D : MAT.STONE, 0, y < 6 ? snowAt(x, y, ROOF_SNOW + y * 10) : 0);
+    }
+  }
+  s.rect(9, 0, 4, 2, MAT.CHAR);
+  s.rect(7, 11, 8, 7, MAT.CHAR);
+  s.rect(8, 13, 6, 5, MAT.EMBER_D);
+  s.rect(9, 15, 4, 3, MAT.EMBER);
+  s.rect(0, 16, 4, 2, MAT.CHAR);
+  s.rect(18, 16, 4, 2, MAT.WOOD_D);
+  return s;
+}
+
+/** A small clean hut with a red-cross cloth on the door and a lit window. */
+function drawInfirmary() {
+  const s = new Surface(34, 28);
+  for (let y = 0; y < 10; y++) {
+    const inset = Math.round((9 - y) * 0.7);
+    for (let x = inset; x < 34 - inset; x++) {
+      s.set(x, y, x % 4 === 0 || y === 9 ? MAT.WOOD_D : MAT.THATCH, 16, snowAt(x, y, ROOF_SNOW + y * 5));
+    }
+  }
+  for (let y = 10; y < 28; y++) {
+    for (let x = 2; x < 32; x++) s.set(x, y, y === 10 || x % 5 === 0 ? MAT.WOOD_D : MAT.WOOD_L);
+  }
+  s.rect(13, 15, 8, 13, MAT.WOOD_D);
+  s.rect(14, 16, 6, 12, MAT.CLOTH, 6);
+  s.rect(16, 18, 2, 6, MAT.MEAT);
+  s.rect(14, 20, 6, 2, MAT.MEAT);
+  s.rect(24, 15, 6, 6, MAT.WOOD_D);
+  s.rect(25, 16, 4, 4, MAT.WINDOW);
+  s.rect(4, 15, 6, 6, MAT.WOOD_D);
+  s.rect(5, 16, 4, 4, MAT.WINDOW);
+  return s;
+}
+
+/** Salvaged window panes over a box of dark earth, green showing through. */
+function drawColdframe() {
+  const s = new Surface(30, 12);
+  for (let y = 0; y < 12; y++) {
+    const back = Math.round((11 - y) * 0.2);
+    for (let x = back; x < 30 - back; x++) {
+      const frame = y === 0 || y === 6 || y === 11 || x === back || x === 29 - back || x % 7 === 0;
+      if (y >= 7) s.set(x, y, frame ? MAT.WOOD_D : MAT.WOOD);
+      else s.set(x, y, frame ? MAT.WOOD_L : (x + y) % 5 === 0 ? MAT.SPROUT : MAT.WINDOW, frame ? 0 : 10, frame ? FLAT_SNOW : 0);
+    }
+  }
+  for (let x = 2; x < 28; x += 3) s.set(x, 5, MAT.SPROUT);
+  return s;
+}
+
+/** Steps into the hillside, a plank door under a mound of turf. */
+function drawCellar() {
+  const s = new Surface(26, 16);
+  for (let y = 0; y < 16; y++) {
+    const half = Math.round(Math.sqrt(Math.max(0, 1 - ((15 - y) / 15) ** 2)) * 13);
+    for (let x = 13 - half; x < 13 + half; x++) {
+      s.set(x, y, (x + y * 3) % 6 === 0 ? MAT.GRASS_D : MAT.GRASS, 12, snowAt(x, y, FLAT_SNOW - 20 + y * 6));
+    }
+  }
+  s.rect(8, 6, 10, 10, MAT.STONE_D);
+  s.rect(9, 7, 8, 9, MAT.WOOD_D);
+  for (let y = 8; y < 16; y += 2) s.rect(9, y, 8, 1, MAT.WOOD);
+  s.set(15, 11, MAT.METAL);
+  return s;
+}
+
+/** A low hut of turf and hides around a pit of stones, steam rising. */
+function drawSauna() {
+  const s = new Surface(28, 20);
+  for (let y = 0; y < 8; y++) {
+    const inset = Math.round((7 - y) * 1.1);
+    for (let x = inset; x < 28 - inset; x++) {
+      s.set(x, y, (x + y) % 5 === 0 ? MAT.GRASS_D : MAT.GRASS, 14, snowAt(x, y, ROOF_SNOW + y * 8));
+    }
+  }
+  for (let y = 8; y < 20; y++) {
+    for (let x = 2; x < 26; x++) s.set(x, y, (x + y * 2) % 7 === 0 ? MAT.TARP_D : MAT.CLOTH, 6);
+  }
+  s.rect(2, 8, 24, 1, MAT.WOOD_D);
+  s.rect(11, 12, 6, 8, MAT.INTERIOR, 40);
+  s.rect(12, 16, 4, 4, MAT.EMBER_D);
+  for (const x of [0, 25]) s.rect(x, 15, 3, 5, MAT.STONE);
+  return s;
+}
+
+/** Benches under a roof, a slate on the wall, a window facing the fire. */
+function drawSchool() {
+  const s = new Surface(40, 30);
+  for (let y = 0; y < 11; y++) {
+    const inset = Math.round((10 - y) * 0.75);
+    for (let x = inset; x < 40 - inset; x++) {
+      s.set(x, y, x % 4 === 0 || y === 10 ? MAT.WOOD_D : MAT.BARK, 16, snowAt(x, y, ROOF_SNOW + y * 5));
+    }
+  }
+  s.rect(19, 0, 2, 3, MAT.WOOD_L);
+  s.rect(18, 1, 4, 1, MAT.METAL);
+  for (let y = 11; y < 30; y++) {
+    const course = (y - 11) % 3;
+    s.rect(2, y, 36, 1, course === 0 ? MAT.WOOD_L : course === 1 ? MAT.WOOD : MAT.WOOD_D);
+  }
+  s.rect(16, 18, 8, 12, MAT.WOOD_D);
+  s.rect(17, 19, 6, 11, MAT.INTERIOR, 40);
+  for (const x of [5, 28]) {
+    s.rect(x, 15, 7, 6, MAT.WOOD_D);
+    s.rect(x + 1, 16, 5, 4, MAT.WINDOW);
+  }
+  s.rect(7, 24, 5, 3, MAT.CHAR);
+  s.set(8, 25, MAT.CLOTH);
+  s.set(10, 25, MAT.CLOTH);
+  return s;
+}
+
+/** Stone on stone at the edge of the clearing. */
+function drawCairn() {
+  const s = new Surface(14, 16);
+  const stones = [[2, 12, 10, 4], [3, 9, 8, 3], [4, 6, 6, 3], [5, 3, 4, 3], [6, 1, 2, 2]];
+  for (const [x, y, w, h] of stones) {
+    s.rect(x, y, w, h, MAT.STONE, 0, FLAT_SNOW - 30);
+    s.rect(x, y + h - 1, w, 1, MAT.STONE_D);
+    s.set(x + w - 1, y, MAT.STONE_D);
+  }
+  s.rect(0, 15, 14, 1, MAT.STONE_D, 10);
+  return s;
+}
+
 /** @type {Record<string, Spot>} */
 const SPOTS = {
   cabin: { x: 66, y: 86, draw: drawCabin, shade: 2 },
@@ -325,6 +481,14 @@ const SPOTS = {
   garden: { x: 256, y: 132, draw: drawGarden, shade: 1 },
   snares: { x: 272, y: 152, draw: drawSnares, shade: 3 },
   shed: { x: 204, y: 156, draw: drawShed, shade: 2 },
+  well: { x: 106, y: 164, draw: drawWell, shade: 2 },
+  kiln: { x: 96, y: 108, draw: drawKiln, shade: 3 },
+  infirmary: { x: 34, y: 66, draw: drawInfirmary, shade: 2 },
+  coldframe: { x: 172, y: 150, draw: drawColdframe, shade: 1 },
+  cellar: { x: 64, y: 108, draw: drawCellar, shade: 2 },
+  sauna: { x: 232, y: 106, draw: drawSauna, shade: 2 },
+  school: { x: 214, y: 58, draw: drawSchool, shade: 2 },
+  cairn: { x: 80, y: 158, draw: drawCairn, shade: 2 },
 };
 
 /** Every structure id the scene understands. */

@@ -1,4 +1,4 @@
-import { FIRE } from '../tuning.js';
+import { FIRE, RESEARCH } from '../tuning.js';
 import { clamp01, fill } from '../util.js';
 import { FIRE_FADING_LINES, KEEPER_RELIGHT_LINES } from '../content/lines.js';
 import { WEATHER_BY_ID } from '../content/weather.js';
@@ -49,7 +49,8 @@ export function stepFire(sim, dt) {
     dial.burn *
     (FIRE.idleDraw + intensityOf(state)) *
     (1 + FIRE.windDraw * weather.wind) *
-    (1 + FIRE.coldDraw * coldOf(state));
+    (1 + FIRE.coldDraw * coldOf(state)) *
+    (1 - Math.min(RESEARCH.maxBurn, bonus(state, 'burn')));
   const douse = WEATHER_BY_ID[weather.id].douse * weather.intensity * exposureOf(state) * dial.weather;
 
   fire.fuel = Math.max(0, fire.fuel - (draw + douse) * dt);

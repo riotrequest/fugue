@@ -25,6 +25,7 @@ import { indexById } from '../util.js';
  * @property {string} [hasten]      camp bonus that speeds the role up
  * @property {boolean} [tends]
  * @property {boolean} [guards]
+ * @property {boolean} [studies]    adds to the notebook's pace instead of taking turns
  */
 
 /** @type {RoleDef[]} */
@@ -123,6 +124,31 @@ export const ROLES = [
       { from: { meat: 1 }, to: { rations: 2 } },
       { from: { forage: 2 }, to: { rations: 1 } },
     ],
+  },
+  {
+    // Studies have no turns: scholars add to the notebook's pace (systems/research.js).
+    id: 'scholar',
+    label: 'scholar',
+    hint: 'works on the notebook by day',
+    vacant: 'No one is working on the notebook now.',
+    max: 2,
+    when: { flags: ['notebook'], popMin: 3 },
+    pose: 'working',
+    dayShift: true,
+    studies: true,
+  },
+  {
+    // Medics heal the sick faster (systems/people.js) and, with herb lore, brew medicine.
+    id: 'medic',
+    label: 'medic',
+    hint: 'tends the sick; brews medicine from forage and cloth once herbs are known',
+    vacant: 'No one is tending the sick now.',
+    max: 2,
+    when: { built: ['infirmary'] },
+    period: 60,
+    pose: 'working',
+    dayShift: true,
+    converts: [{ from: { forage: 3, cloth: 1 }, to: { medicine: 1 }, when: { researched: ['herb-lore'] } }],
   },
   {
     id: 'guard',

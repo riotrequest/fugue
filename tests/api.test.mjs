@@ -11,6 +11,7 @@ const SFX = [
 const STRUCTURES = [
   'leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden',
   'cabin', 'bunkhouse', 'palisade', 'smokehouse', 'watchtower', 'radio',
+  'well', 'kiln', 'infirmary', 'coldframe', 'cellar', 'sauna', 'school', 'cairn',
 ];
 const ACTION_GROUPS = ['fire', 'forage', 'make', 'build', 'venture', 'self'];
 
@@ -26,7 +27,7 @@ function assertStatus(status) {
   assert.ok(status.time >= 0 && status.time < 1);
   assert.ok(['dawn', 'day', 'dusk', 'night'].includes(status.phase));
   assert.equal(status.clock, `Day ${status.day} · ${status.phase}`);
-  assert.ok(['clear', 'rain', 'snow', 'fog', 'ash'].includes(status.weather));
+  assert.ok(['clear', 'rain', 'snow', 'fog', 'ash', 'heat', 'storm'].includes(status.weather));
   assert.match(status.chapter, /^\w+$/);
   assert.match(status.fireLabel, /^the fire is /);
   if (status.ended) assert.deepEqual(keysOf(status.ended), ['canContinue', 'id', 'text', 'title']);
@@ -73,7 +74,13 @@ function assertActions(actions) {
 
 function assertPeople(people) {
   if (people === null) return;
-  assert.deepEqual(keysOf(people), ['cap', 'idle', 'names', 'roles', 'sick', 'total']);
+  assert.deepEqual(keysOf(people), ['cap', 'idle', 'members', 'names', 'roles', 'sick', 'total']);
+  assert.equal(people.members.length, people.total);
+  for (const member of people.members) {
+    assert.ok(member.trust >= 0 && member.trust <= 1, member.name);
+    assert.ok(['devoted', 'loyal', 'steady', 'wary', 'bitter'].includes(member.trustLabel), member.name);
+    assert.ok(Array.isArray(member.bonds), member.name);
+  }
   assert.equal(people.names.length, people.total);
   const working = people.roles.reduce((sum, role) => sum + role.count, 0);
   assert.equal(working + people.idle + people.sick, people.total);
@@ -130,6 +137,7 @@ test('exports a save version and a game with the whole contract', () => {
   for (const method of [
     'tick', 'on', 'serialize', 'log', 'status', 'vitals', 'resources', 'actions', 'perform',
     'people', 'assign', 'event', 'choose', 'memories', 'view', 'setDifficulty',
+    'notebook', 'study', 'aims', 'history',
   ]) {
     assert.equal(typeof game[method], 'function', method);
   }

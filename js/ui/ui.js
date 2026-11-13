@@ -3,6 +3,8 @@ import { byId, setClass, setText } from './dom.js';
 import { createLog } from './journal.js';
 import { createCurtain, createEventCard, createJournal } from './overlays.js';
 import { createHelp } from './help.js';
+import { createSurvivors } from './survivors.js';
+import { createNotebook } from './notebook.js';
 import { createPause } from './pause.js';
 import { createPeople, createStores, createVitals } from './side.js';
 
@@ -97,6 +99,7 @@ export function createUI(
   const help = createHelp(game, { isPaused, seen: helpSeen, onSeen: onHelpSeen, onOpenChange: onHelpChange });
   const hooks = { afterInput: refresh, isPaused: () => isPaused() || help.isOpen() };
 
+  const survivors = createSurvivors(game, hooks);
   createLog(byId('log'), game);
   bindToolbar({ audio, onMuteChange, onRestart });
 
@@ -105,8 +108,14 @@ export function createUI(
     createHud(game),
     createVitals(byId('vitals'), game),
     createStores(byId('stores'), game),
-    createPeople(byId('people'), game, hooks),
-    createActions(byId('actions'), byId('hint'), game, hooks),
+    createPeople(byId('people'), game, { ...hooks, onPick: survivors.open }),
+    survivors,
+    createNotebook(game, hooks),
+    createActions(
+      { quick: byId('actions-quick'), tabs: byId('actions-tabs'), board: byId('actions'), hint: byId('hint') },
+      game,
+      hooks,
+    ),
     createEventCard(game, hooks),
     createJournal(game, hooks),
     createCurtain(game, { hasSave, difficulty, onDifficulty, onBegin, onRestart, onHelp: help.open }),

@@ -116,16 +116,45 @@ export function createStores(root, game) {
  * @param {import('../sim/index.js').Game} game
  * @param {{ afterInput: () => void }} hooks
  */
-export function createPeople(root, game, { afterInput }) {
+export function createPeople(root, game, { afterInput, onPick }) {
   const count = el('span', { class: 'people__num' });
   const summary = el('p', { class: 'people__summary' });
   const roles = el('div', {});
+  const names = el('div', { class: 'people__names', role: 'list' });
+  const who = el(
+    'details',
+    { class: 'people__who' },
+    el('summary', { class: 'people__who-toggle' }, 'who is here'),
+    names,
+  );
   root.append(
     el('h2', { class: 'group__title' }, 'the voices'),
     el('p', { class: 'people__head' }, count, el('span', { class: 'people__at' }, 'at the fire')),
     summary,
     roles,
+    who,
   );
+
+  /** One name per survivor; each opens their card. The mark beside it is how far they trust you. */
+  const createName = (member) =>
+    el(
+      'button',
+      {
+        class: 'member',
+        type: 'button',
+        role: 'listitem',
+        onClick: (event) => onPick?.(member.id, event.currentTarget),
+      },
+      el('span', { class: 'member__mark', 'aria-hidden': 'true' }),
+      el('span', { class: 'member__name' }),
+    );
+  const updateName = (button, member) => {
+    setText(button.lastElementChild, member.name);
+    for (const label of ['devoted', 'loyal', 'steady', 'wary', 'bitter']) setClass(button, `member--${label}`, member.trustLabel === label);
+    setClass(button, 'member--sick', member.sick);
+    button.title = `${member.name}: ${member.role}, ${member.trustLabel}`;
+    button.setAttribute('aria-label', `${member.name}, ${member.role}, ${member.trustLabel}. Open their card.`);
+  };
 
   /** Last count seen per role, and roles the player just changed by hand. */
   const seen = new Map();
@@ -200,6 +229,8 @@ export function createPeople(root, game, { afterInput }) {
       setClass(summary, 'people__summary--full', free === 0);
       summary.title = free === 0 ? 'Newcomers need a bed. Build shelter to make room.' : '';
       root.title = people.names?.join(', ') ?? '';
+      syncList(names, people.members ?? [], { key: (member) => member.id, create: createName, update: updateName });
+      who.hidden = (people.members ?? []).length === 0;
       syncList(roles, people.roles, {
         key: (role) => role.id,
         create,

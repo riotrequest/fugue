@@ -1,6 +1,6 @@
 import { BUILDING_BY_ID } from '../content/buildings.js';
 import { ROLES } from '../content/roles.js';
-import { accrue, add, amount, bonus, canAfford, pay } from './camp.js';
+import { accrue, add, amount, bonus, canAfford, pay, paceBonus } from './camp.js';
 import { meets } from './conditions.js';
 import { tend } from './fire.js';
 import { phaseOf } from './time.js';
@@ -51,7 +51,7 @@ export function stepWork(sim, dt) {
     if (!role.period || (night && offAtNight(role))) continue;
     const workers = state.people.filter((person) => person.role === role.id);
     if (workers.length === 0) continue;
-    const pace = 1 + (role.hasten ? bonus(state, role.hasten) : 0);
+    const pace = 1 + (role.hasten ? bonus(state, role.hasten) : 0) + paceBonus(state, role.id);
     // A hard worker gets through more turns, a shirker fewer.
     const effort = workers.reduce((sum, person) => sum + paceOf(person), 0);
     const turns = accrue(state, role.id, (effort * pace * dt) / role.period);

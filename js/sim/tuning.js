@@ -109,6 +109,8 @@ export const PEOPLE = {
   upkeepSeconds: 90,
   foragePerMeal: 2,
   mend: 0.08,
+  /** Each medic adds this share to how fast the sick heal. */
+  medicCare: 0.5,
   hungerHarm: 0.18,
   thirstHarm: 0.22,
   coldHarm: 0.12,
@@ -170,6 +172,87 @@ export const DIRECTOR = {
   incidentRepeat: 720,
   ambientGap: [35, 70],
   voiceGap: [55, 110],
+  /** A fire kept roaring this long, all told, is seen from far off: the first stranger comes. */
+  roaringCall: 60,
+  /** Halfway there, the camp notices how far the light reaches. */
+  roaringHint: 30,
+  /** Small happenings in the log (content/moments.js): no choice, sometimes a consequence. */
+  firstMoment: 330,
+  momentGap: [85, 160],
+  /** After any card closes at the fire, the next unprompted one waits at least this long. */
+  calmAfter: 45,
+  /** When the incident timer comes round, the chance it starts a new story chain instead. */
+  chainChance: 0.35,
+  /** Most story chains under way at once. */
+  chainsLive: 3,
+  /** Earliest a story chain may begin, and the least time between two beginnings. */
+  firstChain: 900,
+  chainGap: 600,
+};
+
+/** Trust between each survivor and the player (systems/people.js). */
+export const TRUST = {
+  start: 0.5,
+  /** At or above: loyal. Below: wary. */
+  loyal: 0.75,
+  wary: 0.25,
+  /** Gained at each meal served in full, times (1 - trust): it slows as it grows. */
+  fed: 0.012,
+  /** Lost at each meal that falls short. */
+  hungry: 0.035,
+  thirsty: 0.035,
+  cold: 0.02,
+  /** Medicine or care given to them. */
+  care: 0.12,
+  /** Someone close to them dies or is driven out. */
+  grief: 0.12,
+  /** Share of the distance back toward the start that trust closes each second when nothing happens. */
+  settle: 0.0003,
+  /** At dawn, the very wary may walk out. */
+  leaveBelow: 0.15,
+  leaveChance: 0.3,
+  /** In a crisis, the wary may put down their work. */
+  refuseBelow: 0.22,
+  refuseChance: 0.35,
+  /** A loyal worker works a little harder. */
+  loyalPace: 0.15,
+};
+
+/** Bonds between survivors. */
+export const BONDS = {
+  /** Health mended at each full meal for anyone with a friend or partner at the fire. */
+  mend: 0.02,
+  /** Share added to the trust a full meal earns, for the same people. */
+  trust: 0.5,
+  /** Chance a partner follows someone who walks out. */
+  follow: 0.5,
+};
+
+/** The notebook (systems/research.js). Seconds of study per second of camp time. */
+export const RESEARCH = {
+  /** Your own thinking, while awake at the fire: units of work a second. */
+  base: 0.6,
+  /** Each survivor set to study, by day, at an ordinary pace. */
+  perScholar: 0.6,
+  /** The camp's evening school (a personal story) speeds everything up this much. */
+  lessons: 0.15,
+  /** Most a camp bonus can take off the fire's appetite. */
+  maxBurn: 0.4,
+};
+
+/**
+ * The years after the first thaw. Each season lasts `days`; cold moves from
+ * `cold[0]` to `cold[1]` across it (winter peaks in its middle at `peak`).
+ */
+export const YEAR = {
+  seasons: [
+    { id: 'spring', days: 7, cold: [0.15, 0.08] },
+    { id: 'summer', days: 8, cold: [0.02, 0.05] },
+    { id: 'autumn', days: 8, cold: [0.12, 0.5] },
+    { id: 'winter', days: 10, cold: [0.55, 0.6], peak: 0.88 },
+  ],
+  /** Summer heat: how much faster you get thirsty at the height of a hot spell. */
+  heatThirst: 0.6,
 };
 
 /** The travelling trader (systems/trade.js). */

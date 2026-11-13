@@ -20,6 +20,20 @@ export const SAVE_VERSION = 1;
  * @property {boolean} [noticed]  whether the camp has found out their trait
  * @property {number} [thefts]    times they have stolen
  * @property {boolean} [forgiven] caught and let off
+ * @property {number} [trust]     0..1, how far they trust you (absent in old saves: 0.5)
+ * @property {Record<string, 'friend'|'rival'|'partner'>} [bonds]  by the other person's id
+ * @property {string} [arc]       the personal story chain that is theirs, if any
+ *
+ * @typedef {object} ChainState   a story chain under way (systems/chains.js)
+ * @property {string} stage       the stage it waits at, or 'done'
+ * @property {number} at          earliest elapsed second the stage may play
+ * @property {object} ctx         its cast, carried from stage to stage
+ * @property {string} [note]      what the player knows of it, for the survivor card
+ *
+ * @typedef {object} History      what the settlement remembers (systems/history.js)
+ * @property {{ name: string, day: number, cause: string }[]} dead
+ * @property {{ id: number, name: string, day: number, trait: string, trust: number, exiled: boolean, seed: number, returned?: boolean }[]} gone
+ * @property {{ day: number, text: string }[]} records   the camp's chronicle, a few lines per season
  *
  * @typedef {object} GameState
  * @property {number} version
@@ -54,6 +68,10 @@ export const SAVE_VERSION = 1;
  * @property {{ arrival: number, incident: number, ambient: number, voice: number }} timers
  * @property {{ text: string, tone: string, day: number }[]} log
  * @property {{ id: string, title: string, text: string }|null} ended
+ * @property {number} roaring                  seconds the fire has spent roaring, all told
+ * @property {Record<string, ChainState>} chains
+ * @property {{ active: string|null, progress: Record<string, number>, done: string[] }} research
+ * @property {History} history
  */
 
 /** @param {number} seed @param {string} [difficulty] @returns {GameState} */
@@ -105,11 +123,15 @@ export function createState(seed, difficulty = 'normal') {
     },
     log: OPENING_LINES.map((text) => ({ text, tone: 'normal', day: 1 })),
     ended: null,
+    roaring: 0,
+    chains: {},
+    research: { active: null, progress: {}, done: [] },
+    history: { dead: [], gone: [], records: [] },
   };
 }
 
 /** Keys a save from before them may lack; they are filled in on load. */
-const ADDED_LATER = ['difficulty', 'ledger'];
+const ADDED_LATER = ['difficulty', 'ledger', 'roaring', 'chains', 'research', 'history'];
 
 const kindOf = (value) => (Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value);
 

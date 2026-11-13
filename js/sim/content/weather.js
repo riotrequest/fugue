@@ -15,6 +15,8 @@ import { indexById } from '../util.js';
  * @property {string} [onFire]  said under the scene while it is eating at an open fire
  * @property {string} [onBody]  the warmth bar's note while it chills you
  * @property {string} [tip]     said the first time it comes, so the player knows what it does
+ * @property {number} [thirst]  multiplier on how fast you grow thirsty (default 1)
+ * @property {string} [looks]   the weather the renderer and audio show for it (default: its own id)
  */
 
 /** @type {WeatherDef[]} */
@@ -101,6 +103,48 @@ export const WEATHERS = [
       'Ash begins to fall.',
       'The sky goes yellow-grey. Ash comes down.',
       'Ash again, drifting out of a windless sky.',
+    ],
+  },
+  {
+    // After the first thaw: summer's heat. Thirsty work, but the fire is safe.
+    id: 'heat',
+    label: 'heat',
+    weight: [3, 0],
+    when: { season: ['summer'] },
+    douse: 0,
+    chill: 0,
+    forage: 1.1,
+    dread: 0.9,
+    fill: 0,
+    thirst: 1.6,
+    looks: 'clear',
+    onBody: 'parched',
+    tip: 'Heat: you will get thirsty much faster. Keep the water stores up.',
+    lines: [
+      'The heat comes up off the ground in waves.',
+      'Not a breath of wind. The clearing bakes.',
+      'Hot, and getting hotter. The birds have gone quiet.',
+    ],
+  },
+  {
+    // From the second year: storms off the high ground, worse than any rain.
+    id: 'storm',
+    label: 'storm',
+    weight: [1.2, 0],
+    when: { yearMin: 2, coldMax: 0.7 },
+    douse: 0.04,
+    chill: 0.22,
+    forage: 0.7,
+    dread: 1.3,
+    fill: 1 / 6,
+    looks: 'rain',
+    onFire: 'the storm is tearing at it',
+    onBody: 'storm-soaked',
+    tip: 'A storm: it will drown an open fire fast and chill everyone to the bone. Feed the fire, keep it covered, and wait it out.',
+    lines: [
+      'Thunder rolls down the valley. Then the rain comes, sideways.',
+      'The sky goes black at noon. A storm breaks over the camp.',
+      'Lightning, close. The rain arrives a second later, all at once.',
     ],
   },
 ];

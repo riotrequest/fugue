@@ -2,6 +2,7 @@ import { PEOPLE } from '../tuning.js';
 import { RESOURCE_BY_ID } from '../content/resources.js';
 import { BUILDING_BY_ID } from '../content/buildings.js';
 import { RECIPES } from '../content/recipes.js';
+import { PROJECT_BY_ID } from '../content/research.js';
 
 /**
  * What the camp holds and what it has built: stores, storage limits, and the
@@ -20,6 +21,14 @@ export const isBuilt = (state, id) => state.built.includes(id);
 function* holdings(state) {
   for (const id of state.built) yield BUILDING_BY_ID[id];
   for (const recipe of RECIPES) if (amount(state, recipe.id) > 0) yield recipe;
+  for (const id of state.research?.done ?? []) if (PROJECT_BY_ID[id]) yield PROJECT_BY_ID[id];
+}
+
+/** Share added to one job's working speed by everything the camp has (`pace: { roleId: n }`). */
+export function paceBonus(state, roleId) {
+  let total = 0;
+  for (const holding of holdings(state)) total += holding.pace?.[roleId] ?? 0;
+  return total;
 }
 
 /**

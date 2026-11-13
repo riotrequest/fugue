@@ -41,7 +41,6 @@
       <nav class="topbar__tools">
         <span class="online" id="online" hidden></span>
         <button class="tool" id="btn-help" type="button" aria-keyshortcuts="? H">how to play</button>
-        <button class="tool" id="btn-journal" type="button" hidden></button>
         <button class="tool" id="btn-pause" type="button" aria-pressed="false" hidden>pause</button>
         <button class="tool" id="btn-mute" type="button" aria-pressed="false">sound on</button>
         <button class="tool" id="btn-restart" type="button">begin again</button>
@@ -61,15 +60,41 @@
 
     <main class="console">
       <section class="panel panel--log" aria-label="Log">
-        <h2 class="panel__title">what has happened</h2>
+        <div class="log__head">
+          <h2 class="panel__title">what has happened</h2>
+          <nav class="log__tools" aria-label="Memories and notebook">
+            <button class="tool" id="btn-journal" type="button" hidden></button>
+            <button class="tool" id="btn-notebook" type="button" hidden></button>
+          </nav>
+        </div>
         <ol class="log" id="log" aria-live="polite"></ol>
       </section>
 
       <section class="panel panel--actions" aria-label="Actions">
+        <div class="quick" id="actions-quick" role="group" aria-label="The basics" hidden></div>
+        <div class="tabs" id="actions-tabs" role="tablist" aria-label="Kinds of action" hidden></div>
         <div class="actions" id="actions"></div>
-        <p class="hint" id="hint" aria-live="polite"></p>
+        <p class="hint hint--idle" id="hint" aria-live="polite"></p>
       </section>
     </main>
+  </div>
+
+  <div class="overlay" id="notebook" hidden role="dialog" aria-modal="true" aria-labelledby="notebook-title">
+    <article class="card card--notebook">
+      <h2 class="card__title" id="notebook-title">the notebook</h2>
+      <p class="notebook__status" id="notebook-status"></p>
+      <div class="tabs notebook__tabs" id="notebook-tabs" role="tablist" aria-label="Notebook pages"></div>
+      <div class="notebook__page" id="notebook-page" role="tabpanel"></div>
+      <button class="choice" id="notebook-close" type="button">close</button>
+    </article>
+  </div>
+
+  <div class="overlay" id="survivor" hidden role="dialog" aria-modal="true" aria-labelledby="survivor-title">
+    <article class="card card--survivor">
+      <h2 class="card__title" id="survivor-title"></h2>
+      <div class="survivor" id="survivor-body"></div>
+      <button class="choice" id="survivor-close" type="button">close</button>
+    </article>
   </div>
 
   <div class="overlay" id="event" hidden role="dialog" aria-modal="true" aria-labelledby="event-title">

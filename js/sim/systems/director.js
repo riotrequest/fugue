@@ -5,7 +5,11 @@ import { bedsOf } from './camp.js';
 import { meets } from './conditions.js';
 import { intensityOf } from './fire.js';
 import { log, vary } from './journal.js';
-import { openEvent } from './modal.js';
+import { castable, castFor, openEvent } from './modal.js';
+import { MOMENTS } from '../content/moments.js';
+import { fill } from '../util.js';
+import { applyEffects } from './effects.js';
+import { startChain, stepChains } from './chains.js';
 import { isAway, phaseOf } from './time.js';
 import { stepTrader } from './trade.js';
 
@@ -63,19 +67,50 @@ function arrival(sim) {
   }
 
   state.timers.arrival = after(sim, DIRECTOR.arrivalGap);
-  const options = ARRIVALS.filter((def) => meets(state, def.when));
+  const options = ARRIVALS.filter((def) => meets(state, def.when) && castable(state, def));
   openEvent(sim, sim.rng.weighted(options, (def) => def.weight ?? 1).id);
 }
 
+/** Seconds before the same moment may happen again, unless it says otherwise. */
+const MOMENT_REPEAT = 1500;
+
+/**
+ * Small happenings told in the log: a child's laugh, a fox at the midden, two
+ * people sharing a coat. No card and no choice; some leave a mark (a little
+ * trust, a bond, a handful of food).
+ */
+function moment(sim) {
+  const { state, rng } = sim;
+  if (state.elapsed < (state.timers.moment ?? DIRECTOR.firstMoment)) return;
+  state.timers.moment = after(sim, DIRECTOR.momentGap);
+  const options = MOMENTS.filter((def) => {
+    const last = state.seen[`moment:${def.id}`];
+    const rested = last === undefined || state.elapsed - last >= (def.every ?? MOMENT_REPEAT);
+    return rested && meets(state, def.when) && castable(state, def);
+  });
+  if (options.length === 0) return;
+  const def = rng.weighted(options, (option) => option.weight ?? 1);
+  state.seen[`moment:${def.id}`] = state.elapsed;
+  const ctx = castFor(sim, def);
+  const text = Array.isArray(def.text) ? vary(sim, def.text) : def.text;
+  log(sim, fill(text, ctx), def.tone);
+  applyEffects(sim, def.effects ?? [], ctx);
+}
+
+/** Whether the camp has had a breath since the last card closed. */
+const calm = (state) => state.elapsed >= (state.timers.calm ?? 0);
+
 function incident(sim) {
   const { state } = sim;
-  if (state.elapsed < state.timers.incident) return;
+  if (state.elapsed < state.timers.incident || !calm(state)) return;
   state.timers.incident = after(sim, DIRECTOR.incidentGap);
+  // Now and then the turn goes to a longer story instead.
+  if (sim.rng.chance(DIRECTOR.chainChance) && startChain(sim)) return;
 
   const options = INCIDENTS.filter((def) => {
     const last = state.seen[def.id];
     const rested = last === undefined || state.elapsed - last >= (def.every ?? DIRECTOR.incidentRepeat);
-    return rested && meets(state, def.when);
+    return rested && meets(state, def.when) && castable(state, def);
   });
   if (options.length > 0) openEvent(sim, sim.rng.weighted(options, (def) => def.weight ?? 1).id);
 }
@@ -87,6 +122,8 @@ export function stepDirector(sim) {
 
   ambience(sim);
   talk(sim);
+  if (!state.event) moment(sim);
+  if (!state.event && calm(state)) stepChains(sim);
   if (!state.event) arrival(sim);
   if (!state.event) incident(sim);
   if (!state.event) stepTrader(sim);

@@ -9,6 +9,7 @@ import { AMBIENT_LINES, VOICE_LINES } from '../js/sim/content/lines.js';
 import { LOCATIONS } from '../js/sim/content/locations.js';
 import { MEMORIES, MEMORY_BY_ID } from '../js/sim/content/memories.js';
 import { RECIPES } from '../js/sim/content/recipes.js';
+import { PROJECTS } from '../js/sim/content/research.js';
 import { RESOURCE_BY_ID, RESOURCE_GROUP_BY_ID, RESOURCES } from '../js/sim/content/resources.js';
 import { ROLES } from '../js/sim/content/roles.js';
 import { CHAPTERS, MILESTONES, NAMES } from '../js/sim/content/story.js';
@@ -25,6 +26,7 @@ const EVENTS = Object.values(EVENT_BY_ID);
 const STRUCTURE_IDS = [
   'leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden',
   'cabin', 'bunkhouse', 'palisade', 'smokehouse', 'watchtower', 'radio',
+  'well', 'kiln', 'infirmary', 'coldframe', 'cellar', 'sauna', 'school', 'cairn',
 ];
 
 const isResource = (id) => id in RESOURCE_BY_ID;
@@ -114,7 +116,7 @@ test('resources, recipes, buildings and roles refer only to things that exist', 
       assertCost(from, role.id);
       assertCost(to, role.id);
     }
-    assert.ok(role.period > 0 || role.guards, `${role.id} does nothing`);
+    assert.ok(role.period > 0 || role.guards || role.studies, `${role.id} does nothing`);
   }
   for (const weather of WEATHERS) assertCondition(weather.when, weather.id);
 });
@@ -194,12 +196,13 @@ test('every event is well formed and always has a way out', () => {
       assertEffects(choice.effects, where);
     }
     const usesName = JSON.stringify(event).includes('{name}');
-    if (usesName && !event.cast) {
+    // A `pick` effect names someone partway through, for the lines after it.
+    if (usesName && !event.cast && !JSON.stringify(event).includes('"pick"')) {
       const chained = EVENTS.some((other) => other.cast && JSON.stringify(other).includes(`"next":"${event.id}"`));
       assert.ok(chained, `${event.id} speaks of {name} but casts no one`);
     }
   }
-  for (const event of ARRIVALS) assert.equal(event.cast, 'newcomer', event.id);
+  for (const event of ARRIVALS) assert.ok(['newcomer', 'returning'].includes(event.cast), event.id);
 });
 
 test('locations draw on real events and every memory can be found', () => {
@@ -228,11 +231,14 @@ test('flags that gate content are set somewhere', () => {
   const note = (effects, where) => assertEffects(effects, where).flags.forEach((flag) => set.add(flag));
   for (const milestone of MILESTONES) {
     assertCondition(milestone.when, milestone.id);
+    set.add(`done:${milestone.id}`);
     note(milestone.effects, milestone.id);
   }
   for (const action of ACTION_DEFS) note(action.effects, action.id);
   for (const event of EVENTS) event.choices.forEach((choice) => note(choice.effects, event.id));
   for (const location of LOCATIONS) (location.finds ?? []).forEach((find) => set.add(find.flag));
+  for (const project of PROJECTS) (project.flags ?? []).forEach((flag) => set.add(flag));
+  for (const ending of ENDINGS) if (ending.afterword) set.add(`continued:${ending.id}`);
 
   const wanted = new Set();
   const want = (condition = {}) => [...(condition.flags ?? []), ...(condition.notFlags ?? [])].forEach((flag) => wanted.add(flag));

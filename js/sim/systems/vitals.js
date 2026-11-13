@@ -82,7 +82,7 @@ export function stepVitals(sim, dt) {
 
   const { hunger } = dialOf(state);
   vitals.food = clamp01(vitals.food - VITALS.foodDrain * hunger * dt);
-  vitals.water = clamp01(vitals.water - VITALS.waterDrain * hunger * dt);
+  vitals.water = clamp01(vitals.water - VITALS.waterDrain * hunger * (weatherOf(state).thirst ?? 1) * dt);
 
   const target = isAway(state) ? VITALS.awayWarmth : clamp01(comfortOf(state));
   vitals.warmth = clamp01(vitals.warmth + (target - vitals.warmth) * Math.min(1, VITALS.warmthRate * dt));

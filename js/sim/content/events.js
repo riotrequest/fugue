@@ -1,6 +1,9 @@
 import { indexById } from '../util.js';
 import { ENCOUNTERS } from './encounters.js';
 import { TRADER_PARTING } from './trader.js';
+import { DECISIONS, RETURNS } from './decisions.js';
+import { CHAIN_EVENTS } from './chains.js';
+import { FRONTIER_ENCOUNTERS } from './frontier.js';
 
 /**
  * Modal story events. While one is open the world waits for a choice.
@@ -19,7 +22,7 @@ import { TRADER_PARTING } from './trader.js';
  * @property {string} title
  * @property {string|string[]} text           paragraphs; `{name}` is the cast member
  * @property {'normal'|'good'|'warn'|'danger'|'memory'|'voice'} [tone]
- * @property {'newcomer'|'survivor'} [cast]   who `{name}` is: a new arrival or someone at the fire
+ * @property {string} [cast]                 who `{name}` (and `{other}`) are: a cast kind from systems/modal.js
  * @property {object} [when]                  for arrivals and incidents: when it may happen
  * @property {number} [weight]                relative likelihood among eligible events (default 1)
  * @property {number} [every]                 seconds before an incident may recur
@@ -244,6 +247,28 @@ const STORY_EVENTS = [
         ],
       },
       {
+        id: 'loyal-guard',
+        label: 'stand back to back with someone you trust',
+        hint: 'they would do it for you',
+        when: { loyalMin: 1 },
+        effects: [
+          { pick: 'loyal' },
+          {
+            roll: 0.75,
+            pass: [
+              { threat: 0.1 },
+              { trust: { who: 'cast', delta: 0.05 } },
+              { log: '{name} is at your shoulder before you ask, a burning branch in each hand. The shapes at the tree line think better of it.', tone: 'good' },
+            ],
+            fail: [
+              { threat: 0.25 },
+              { person: { who: 'cast', health: -0.2, cause: 'wounds' } },
+              { log: 'They come in anyway. {name} takes the bite meant for you, and does not complain about it once.', tone: 'danger' },
+            ],
+          },
+        ],
+      },
+      {
         id: 'noise',
         label: 'shout, and beat the pot',
         hint: 'it may be enough',
@@ -419,6 +444,7 @@ export const ARRIVALS = [
     ],
     choices: [{ id: 'welcome', label: 'make room', effects: [...WELCOME] }, TURN_AWAY],
   },
+  ...RETURNS,
   {
     id: 'arrival-tin',
     title: 'Something to share',
@@ -724,7 +750,8 @@ export const INCIDENTS = [
       { id: 'shoo', label: 'drive it off', effects: [{ log: 'It goes. It looks back twice.' }] },
     ],
   },
+  ...DECISIONS,
 ];
 
 /** Every event in the game, keyed by id. */
-export const EVENT_BY_ID = indexById([...STORY_EVENTS, ...ARRIVALS, ...INCIDENTS, ...ENCOUNTERS]);
+export const EVENT_BY_ID = indexById([...STORY_EVENTS, ...ARRIVALS, ...INCIDENTS, ...ENCOUNTERS, ...CHAIN_EVENTS, ...FRONTIER_ENCOUNTERS]);

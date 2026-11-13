@@ -1,4 +1,5 @@
 import { fill, paragraphs } from '../util.js';
+import { DIRECTOR } from '../tuning.js';
 import { EVENT_BY_ID } from '../content/events.js';
 import { MEMORY_BY_ID } from '../content/memories.js';
 import { lacking, pay } from './camp.js';
@@ -39,7 +40,7 @@ export function describeEvent(state) {
       const reason = lacking(state, choice.cost, choice.tools);
       return {
         id: choice.id,
-        label: choice.label,
+        label: fill(choice.label, ctx),
         hint: choice.hint ?? null,
         enabled: reason === null,
         reason,
@@ -66,6 +67,8 @@ export function choose(sim, choiceId) {
   pay(state, choice.cost);
   state.event = null;
   sim.emit('eventClosed', { id });
+  // Give the camp a breath before the next unprompted card.
+  if (!state.expedition) state.timers.calm = state.elapsed + DIRECTOR.calmAfter;
 
   applyEffects(sim, choice.effects, ctx);
   applyEffects(sim, ctx.then ?? [], ctx);

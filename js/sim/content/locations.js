@@ -15,6 +15,8 @@ import { indexById } from '../util.js';
  * @property {string[]} encounters event ids (see encounters.js)
  * @property {{ memory: string, event: string, when?: object }[]} scenes  in story order
  * @property {{ flag: string, log: string }[]} [finds]  what the first trip reveals
+ * @property {{ event: string, chain: string, when?: object }[]} [requests]  errands a survivor
+ *                                 asked for: the event joins the trip, about that chain's person
  */
 
 /** @type {LocationDef[]} */
@@ -67,6 +69,7 @@ export const LOCATIONS = [
       { memory: 'sill', event: 'suburb-house' },
       { memory: 'marks', event: 'suburb-doorframe' },
     ],
+    requests: [{ event: 'request-found', chain: 'ring', when: { notFlags: ['request-ring'] } }],
   },
   {
     id: 'hospital',
@@ -94,6 +97,58 @@ export const LOCATIONS = [
       { memory: 'daythree', event: 'relay-tray' },
       { memory: 'loop', event: 'relay-machine' },
     ],
+  },
+
+  // The far valley (content/frontier.js): found through the notebook's maps, the neighbours, a second year.
+  {
+    id: 'quarry',
+    label: 'go up to the quarry',
+    hint: 'a long morning; stone, salvage, and a view',
+    cost: { rations: 2, water: 2 },
+    days: 0.3,
+    depart: 'You take the old haul road toward the grey cut in the hillside.',
+    encounters: ['quarry-face', 'quarry-shed', 'quarry-pool', 'quarry-truck'],
+    scenes: [],
+  },
+  {
+    id: 'lake',
+    label: 'walk out to the lake',
+    hint: 'fish, reeds, and summer cabins',
+    cost: { rations: 2, water: 1 },
+    days: 0.3,
+    depart: 'You follow the outflow up through the birches to the lake.',
+    encounters: ['lake-ice', 'lake-boathouse', 'lake-reeds', 'lake-cabin'],
+    scenes: [],
+  },
+  {
+    id: 'farm',
+    label: 'search the old farmstead',
+    hint: 'a day there and back; jars, seed, machinery',
+    cost: { rations: 3, water: 2 },
+    days: 0.35,
+    depart: 'You cut across the fields toward the farmhouse with the fallen barn.',
+    encounters: ['farm-barn', 'farm-kitchen', 'farm-orchard', 'farm-grave'],
+    scenes: [],
+  },
+  {
+    id: 'station',
+    label: 'visit the ranger station',
+    hint: 'the neighbours: news, seed, a little trade',
+    cost: { rations: 2, water: 1 },
+    days: 0.3,
+    depart: 'You walk east to the ranger station, keeping your hands where they can be seen.',
+    encounters: ['station-gate', 'station-garden', 'station-child', 'station-radio'],
+    scenes: [],
+  },
+  {
+    id: 'pass',
+    label: 'climb to the pass',
+    hint: 'dawn to dark, above the trees: see what lies beyond',
+    cost: { rations: 4, water: 3 },
+    days: 0.45,
+    depart: 'You leave before light and climb until the trees give out.',
+    encounters: ['pass-snowfield', 'pass-hut', 'pass-cairn', 'pass-ibex'],
+    scenes: [],
   },
 ];
 

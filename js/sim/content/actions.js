@@ -21,7 +21,7 @@ import { LOCATIONS } from './locations.js';
  * @property {number} [cooldown]               real seconds before it can be repeated
  * @property {string} [shares]                 cooldown key shared with other actions
  * @property {object} [when]
- * @property {{ when: object, reason: string }[]} [gates]
+ * @property {{ when: object, reason: string, waits?: boolean }[]} [gates]   `waits`: time alone lifts it
  * @property {object[]} effects
  */
 
@@ -38,7 +38,8 @@ export const ACTION_GROUPS = [
 export const VENTURE_COOLDOWN = 'venture';
 
 const NEEDS_FIRE = { when: { fireMin: 0.2 }, reason: 'fire too low' };
-const NEEDS_LIGHT = { when: { phase: ['dawn', 'day', 'dusk'] }, reason: 'dark until dawn' };
+const NEEDS_LIGHT = { when: { phase: ['dawn', 'day', 'dusk'] }, reason: 'dark until dawn', waits: true };
+const NEEDS_MORNING = { when: { phase: ['dawn', 'day'] }, reason: 'too late to set out', waits: true };
 
 /** @type {ActionDef[]} */
 const CAMP_ACTIONS = [
@@ -367,10 +368,35 @@ const CAMP_ACTIONS = [
     when: { known: ['medicine'], sickMin: 1 },
     effects: [
       { person: { who: 'sickest', health: 0.4 } },
+      // Care given is remembered.
+      { trust: { who: 'cast', delta: 0.12 } },
       {
         log: [
           'You sit {name} up and get two tablets and some water into them.',
           '{name} takes the medicine without opening their eyes. By evening the fever has broken.',
+        ],
+        tone: 'good',
+      },
+    ],
+  },
+  {
+    // The notebook's herb lore (content/research.js) turns forage into medicine.
+    id: 'poultice',
+    group: 'make',
+    label: 'brew a poultice',
+    hint: 'willow bark, yarrow and resin, bound in cloth: medicine of a kind',
+    cost: { forage: 3, cloth: 1 },
+    fills: 'medicine',
+    cooldown: 8,
+    when: { researched: ['herb-lore'] },
+    gates: [NEEDS_FIRE],
+    effects: [
+      { grant: { medicine: 1 } },
+      { sfx: 'craft' },
+      {
+        log: [
+          'Bark and leaves steeped, mashed, wrapped. It smells terrible. That is probably good.',
+          'You bind the poultice in a strip of clean cloth and set it by to cool.',
         ],
         tone: 'good',
       },
@@ -435,7 +461,7 @@ const ventureAction = (location) => ({
   shares: VENTURE_COOLDOWN,
   when: { flags: [`loc-${location.id}`] },
   gates: [
-    { when: { phase: ['dawn', 'day'] }, reason: 'too late to set out' },
+    NEEDS_MORNING,
     { when: { vitalMin: { health: 0.35 } }, reason: 'too weak to travel' },
   ],
   effects: [{ venture: location.id }],
@@ -451,3 +477,11 @@ export const ACTION_DEFS = [
 ];
 
 export const ACTION_BY_ID = indexById(ACTION_DEFS);
+
+/**
+ * Reasons that only need the clock to move on (daylight, mostly). The action
+ * panel shows them as a wait rather than a lack.
+ */
+export const WAITING_REASONS = [
+  ...new Set(ACTION_DEFS.flatMap((def) => (def.gates ?? []).filter((gate) => gate.waits).map((gate) => gate.reason))),
+];

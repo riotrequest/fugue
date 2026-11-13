@@ -21,6 +21,11 @@ import { SEASON } from '../tuning.js';
  * @property {number} [smoke]    added to the cook's working speed
  * @property {Record<string, number>} [caps]  storage it adds
  * @property {{ id: string, period: number, when: object }} [grows]  passive produce
+ * @property {number} [mend]     share added to how fast survivors heal
+ * @property {number} [burn]     share taken off the fire's appetite for wood
+ * @property {number} [research] share added to the notebook's pace
+ * @property {number} [cheer]    share added to the trust a good meal earns
+ * @property {number} [solace]   share of grief's cost in trust that is spared
  */
 
 /** @type {BuildingDef[]} */
@@ -148,6 +153,85 @@ export const BUILDINGS = [
     cost: { wood: 15, scrap: 8, wire: 4, parts: 3, batteries: 2 },
     when: { built: ['workbench'], flags: ['radio-idea'] },
     done: 'The mast goes up a little crooked. Wire sings in the wind.',
+  },
+
+  // Worked out in the notebook (content/research.js), or earned the hard way.
+  {
+    id: 'well',
+    label: 'dig a well',
+    hint: 'water without the walk to the creek',
+    cost: { wood: 12, stone: 16, fiber: 4 },
+    when: { researched: ['water-finding'] },
+    done: 'Eleven feet down, the spade comes up wet. A ring of stones, a windlass, a bucket on a rope.',
+    grows: { id: 'water', period: 30, when: {} },
+    caps: { water: 6 },
+  },
+  {
+    id: 'kiln',
+    label: 'build a charcoal kiln',
+    hint: 'charcoal for the fire: it eats a fifth less wood',
+    cost: { stone: 18, wood: 10 },
+    when: { researched: ['charcoal'] },
+    done: 'A squat dome of stone and clay with a smoke hole. The first charcoal comes out ringing.',
+    burn: 0.2,
+    grows: { id: 'tinder', period: 120, when: {} },
+  },
+  {
+    id: 'infirmary',
+    label: 'raise an infirmary',
+    hint: 'beds for the sick, out of the smoke; everyone heals faster',
+    cost: { wood: 24, cloth: 4, fiber: 6 },
+    when: { researched: ['field-medicine'] },
+    done: 'A small clean room with two cots and a shelf. It smells of pine resin and boiled cloth.',
+    mend: 0.4,
+  },
+  {
+    id: 'coldframe',
+    label: 'build a cold frame',
+    hint: 'greens under glass, whatever the season',
+    cost: { wood: 10, scrap: 4, cloth: 3 },
+    when: { researched: ['seed-saving'] },
+    done: 'Salvaged window panes over a box of dark earth. Inside, it is already spring.',
+    grows: { id: 'forage', period: 70, when: {} },
+  },
+  {
+    id: 'cellar',
+    label: 'dig a root cellar',
+    hint: 'cool and dark below the frost: much more food keeps',
+    cost: { wood: 14, stone: 12 },
+    when: { researched: ['preserving'] },
+    done: 'Steps down into the hillside, a plank door, shelves in the cool dark.',
+    caps: { rations: 20, forage: 15, meat: 10 },
+  },
+  {
+    id: 'sauna',
+    label: 'build a sweat lodge',
+    hint: 'hot stones and steam: warmth, healing, and better spirits',
+    cost: { wood: 16, stone: 12, hide: 3 },
+    when: { researched: ['insulation'] },
+    done: 'A low hut of turf and hides around a pit of stones. The first evening, everyone comes out pink and laughing.',
+    warmth: 0.06,
+    mend: 0.15,
+    cheer: 0.5,
+  },
+  {
+    id: 'school',
+    label: 'raise a schoolhouse',
+    hint: 'a roof for lessons: the notebook goes faster',
+    cost: { wood: 30, stone: 6, fiber: 6 },
+    when: { researched: ['teaching'] },
+    done: 'Benches, a slate on the wall, a window facing the fire. Somebody chalks the alphabet on the slate before the roof is even on.',
+    research: 0.4,
+    warmth: 0.03,
+  },
+  {
+    id: 'cairn',
+    label: 'raise a cairn for the dead',
+    hint: 'a place to remember them: grief costs the camp less',
+    cost: { stone: 12 },
+    when: { deadMin: 1 },
+    done: 'Stone on stone, at the edge of the clearing, facing east. Everyone carries one.',
+    solace: 0.6,
   },
 ];
 
