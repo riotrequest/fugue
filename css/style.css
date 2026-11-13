@@ -148,6 +148,17 @@ button {
 }
 .tool--new { color: var(--memory); animation: pulse 1.6s steps(4) infinite; }
 
+/* Wide screens: one row, always. The tools never drop to a line of their own when
+   the clock or the player count grows by a word; the status squeezes instead. */
+@media (min-width: 900px) {
+  .topbar { flex-wrap: nowrap; gap: 8px 16px; }
+  .topbar__title { flex: none; }
+  .topbar__status { flex: 0 1 auto; min-width: 0; }
+  .topbar__tools { flex: none; flex-wrap: nowrap; }
+  .online { margin-right: 8px; }
+  #btn-restart { margin-left: 6px; }
+}
+
 /* ---------- the scene ---------- */
 
 .stage {
