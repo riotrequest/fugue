@@ -354,26 +354,34 @@ function drawKiln() {
   return s;
 }
 
-/** A small clean hut with a red-cross cloth on the door and a lit window. */
+/** A sick tent: a small ridge tent of pale canvas, a red cross over the open flap. */
 function drawInfirmary() {
-  const s = new Surface(34, 28);
-  for (let y = 0; y < 10; y++) {
-    const inset = Math.round((9 - y) * 0.7);
-    for (let x = inset; x < 34 - inset; x++) {
-      s.set(x, y, x % 4 === 0 || y === 9 ? MAT.WOOD_D : MAT.THATCH, 16, snowAt(x, y, ROOF_SNOW + y * 5));
+  const s = new Surface(28, 21);
+  const cx = 13.5;
+  for (let y = 2; y <= 19; y++) {
+    const half = 1 + (y - 2) * 0.76;
+    const left = Math.round(cx - half);
+    const right = Math.round(cx + half) - 1;
+    for (let x = left; x <= right; x++) {
+      const edge = x === left || x === right || y === 19;
+      const seam = !edge && (x === left + 1 || x === right - 1);
+      s.set(x, y, edge ? MAT.WOOD_D : seam ? MAT.ROPE : MAT.CLOTH, 6, edge ? 0 : snowAt(x, y, ROOF_SNOW + y * 16));
     }
   }
-  for (let y = 10; y < 28; y++) {
-    for (let x = 2; x < 32; x++) s.set(x, y, y === 10 || x % 5 === 0 ? MAT.WOOD_D : MAT.WOOD_L);
+  // The open flap, tied back, and the dark inside.
+  for (let y = 12; y <= 19; y++) {
+    const half = (y - 12) * 0.5 + 0.5;
+    for (let x = Math.round(cx - half); x <= Math.round(cx + half) - 1; x++) s.set(x, y, MAT.INTERIOR, 30);
   }
-  s.rect(13, 15, 8, 13, MAT.WOOD_D);
-  s.rect(14, 16, 6, 12, MAT.CLOTH, 6);
-  s.rect(16, 18, 2, 6, MAT.MEAT);
-  s.rect(14, 20, 6, 2, MAT.MEAT);
-  s.rect(24, 15, 6, 6, MAT.WOOD_D);
-  s.rect(25, 16, 4, 4, MAT.WINDOW);
-  s.rect(4, 15, 6, 6, MAT.WOOD_D);
-  s.rect(5, 16, 4, 4, MAT.WINDOW);
+  s.set(9, 16, MAT.ROPE);
+  s.set(18, 16, MAT.ROPE);
+  // The cross, bold enough to read at night.
+  s.rect(13, 5, 2, 6, MAT.MEAT);
+  s.rect(11, 7, 6, 2, MAT.MEAT);
+  // Ridge pole and pegs.
+  s.rect(13, 0, 2, 3, MAT.WOOD_D);
+  s.set(0, 20, MAT.WOOD_D);
+  s.set(27, 20, MAT.WOOD_D);
   return s;
 }
 
@@ -483,7 +491,7 @@ const SPOTS = {
   shed: { x: 204, y: 156, draw: drawShed, shade: 2 },
   well: { x: 106, y: 164, draw: drawWell, shade: 2 },
   kiln: { x: 96, y: 108, draw: drawKiln, shade: 3 },
-  infirmary: { x: 34, y: 66, draw: drawInfirmary, shade: 2 },
+  infirmary: { x: 236, y: 155, draw: drawInfirmary, shade: 2 },
   coldframe: { x: 172, y: 150, draw: drawColdframe, shade: 1 },
   cellar: { x: 64, y: 108, draw: drawCellar, shade: 2 },
   sauna: { x: 232, y: 106, draw: drawSauna, shade: 2 },
