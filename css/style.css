@@ -115,6 +115,14 @@ button {
 #btn-restart { margin-left: 10px; }
 #btn-restart:hover { color: var(--danger); border-color: var(--danger); }
 
+/* The source code, last of all and set off by a thin rule. */
+.tool--link {
+  margin-left: 6px;
+  text-decoration: none;
+  border-left-color: var(--line);
+}
+.tool--link::after { content: ' ↗'; }
+
 /* How many people have the game open: its own little badge, before the tools. */
 .online {
   margin-right: 12px;
