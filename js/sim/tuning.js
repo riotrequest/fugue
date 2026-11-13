@@ -27,9 +27,10 @@ export const SEASON = {
   codaDay: 13,
   /** Dawn of this day is the thaw. */
   thawDay: 17,
-  /** After the thaw (for a player who keeps going), cold eases to this over this many days. */
+  /** After the thaw (for a player who keeps going), cold eases to this over this many
+   *  days, quickest at first, so the snow is visibly going on the first day of spring. */
   springCold: 0.15,
-  springDays: 5,
+  springDays: 2,
   /** Share of forage lost to the season at full cold. */
   scarcity: 0.75,
   /** Cold at which the garden dies. */

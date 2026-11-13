@@ -16,7 +16,8 @@ export function coldOf(state) {
   const daysIn = state.clock.day - 1 + state.clock.time;
   if (state.flags['done:thaw']) {
     const sinceThaw = Math.max(0, daysIn - (SEASON.thawDay - 1));
-    return clamp01(lerp(1, SEASON.springCold, Math.min(1, sinceThaw / SEASON.springDays)));
+    const t = Math.min(1, sinceThaw / SEASON.springDays);
+    return clamp01(lerp(1, SEASON.springCold, 1 - (1 - t) ** 2));
   }
   return clamp01(lerp(SEASON.startCold, 1, daysIn / (SEASON.deepWinterDay - 1)));
 }
