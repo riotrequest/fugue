@@ -108,7 +108,7 @@ export const ROLES = [
   {
     id: 'cook',
     label: 'cook',
-    hint: 'two rations from every cut of meat; with a pot and water to spare, stew makes more',
+    hint: 'makes stew when there is a pot and the makings, else two rations from every cut of meat',
     vacant: 'No one is cooking now.',
     max: 1,
     when: { built: ['rack'] },
@@ -116,8 +116,8 @@ export const ROLES = [
     pose: 'working',
     hasten: 'smoke',
     converts: [
-      // Stew first, but never with the last of the water: the camp has to drink.
-      { from: { meat: 1, forage: 2, water: 1 }, to: { rations: 4 }, when: { has: { pot: 1, water: 3 } } },
+      // Stew whenever there is a pot and the makings; plain cooked meat otherwise.
+      { from: { meat: 1, forage: 2, water: 1 }, to: { rations: 4 }, when: { has: { pot: 1 } } },
       { from: { meat: 1 }, to: { rations: 2 } },
       { from: { forage: 2 }, to: { rations: 1 } },
     ],
