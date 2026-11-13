@@ -19,8 +19,9 @@ import { createEase, lerp, rand, smoothstep } from '../util.js';
 const FIRE_TIME_CONSTANT = 0.6;
 
 /** The flame itself: a broad, warm band of brown noise that rises as it grows.
- *  Halved from 0.48 after playtesting: its steady rush read as a loud wind. */
-const BODY_LEVEL = 0.24;
+ *  Down from 0.48 after playtesting: its steady rush drowned out everything else.
+ *  The crackle (sizzle and snaps) is kept as it was. */
+const BODY_LEVEL = 0.036;
 const BODY_HZ = [300, 480];
 const BODY_Q = 0.6;
 /** Fire levels between which the body fades in, and the curve it follows. */
@@ -28,7 +29,7 @@ const BODY_ONSET = [0.12, 1];
 const BODY_CURVE = 0.5;
 
 /** The low roar under a fire that is properly burning. */
-const ROAR_LEVEL = 0.065;
+const ROAR_LEVEL = 0.01;
 const ROAR_CUTOFF_HZ = [110, 260];
 const ROAR_ONSET = [0.3, 1];
 const ROAR_CURVE = 1.5;

@@ -11,8 +11,8 @@
 import { startLoop } from '../noise.js';
 import { createEase, lerp, rand } from '../util.js';
 
-/** Down from 0.3 in three halvings after playtesting: the wind was drowning out everything else. */
-const WIND_LEVEL = 0.0375;
+/** Down from 0.3 after playtesting: the wind was drowning out everything else. */
+const WIND_LEVEL = 0.01875;
 /** A breath of air remains even when the wind is still. */
 const WIND_FLOOR = 0.05;
 /** Perceptual curve: light winds stay light. */
@@ -30,7 +30,7 @@ const COLD_LIFT = 1.3;
 const BODY_CEILING_HZ = 900;
 
 /** The thin winter whistle, heard only in the gusts of a cold wind. */
-const WHISTLE_LEVEL = 0.0025;
+const WHISTLE_LEVEL = 0.00125;
 const WHISTLE_HZ = [900, 1400];
 const WHISTLE_Q = 6;
 
