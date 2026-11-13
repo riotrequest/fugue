@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fugue</title>
+  <meta name="description" content="Fugue — a graphic text game. You wake beside a dying fire after the end of the world. Keep it burning.">
+  <meta name="theme-color" content="#070a1f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%23070a1f'/%3E%3Cpath d='M3 1h1v1h1v2h1v2H5v1H3V6H2V4h1z' fill='%23f2c14e'/%3E%3Cpath d='M3 4h2v2H3z' fill='%23ff8a3d'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <h1 class="topbar__title">Fugue</h1>
+      <p class="topbar__status">
+        <span id="hud-chapter"></span>
+        <span id="hud-clock"></span>
+        <span id="hud-season"></span>
+        <span id="hud-weather"></span>
+      </p>
+      <nav class="topbar__tools">
+        <span class="online" id="online" hidden></span>
+        <button class="tool" id="btn-help" type="button" aria-keyshortcuts="? H">how to play</button>
+        <button class="tool" id="btn-journal" type="button" hidden></button>
+        <button class="tool" id="btn-pause" type="button" aria-pressed="false" hidden>pause</button>
+        <button class="tool" id="btn-mute" type="button" aria-pressed="false">sound on</button>
+        <button class="tool" id="btn-restart" type="button">begin again</button>
+      </nav>
+    </header>
+
+    <section class="stage" aria-label="The clearing">
+      <canvas class="stage__canvas" id="scene" width="320" height="180"></canvas>
+      <div class="stage__hud vitals" id="vitals" aria-label="Fire and body"></div>
+      <p class="stage__caption" id="hud-fire" aria-live="polite"></p>
+    </section>
+
+    <!-- Either side of the scene on wide screens; below the console on narrow ones. -->
+    <aside class="panel rail rail--stores stores" id="stores" aria-label="Stores"></aside>
+    <aside class="panel rail rail--people people" id="people" aria-label="The voices" hidden></aside>
+
+    <main class="console">
+      <section class="panel panel--log" aria-label="Log">
+        <h2 class="panel__title">what has happened</h2>
+        <ol class="log" id="log" aria-live="polite"></ol>
+      </section>
+
+      <section class="panel panel--actions" aria-label="Actions">
+        <div class="actions" id="actions"></div>
+        <p class="hint" id="hint" aria-live="polite"></p>
+      </section>
+    </main>
+  </div>
+
+  <div class="overlay" id="event" hidden role="dialog" aria-modal="true" aria-labelledby="event-title">
+    <article class="card">
+      <h2 class="card__title" id="event-title"></h2>
+      <div class="card__body" id="event-body"></div>
+      <ol class="card__choices" id="event-choices"></ol>
+    </article>
+  </div>
+
+  <div class="overlay" id="journal" hidden role="dialog" aria-modal="true" aria-labelledby="journal-title">
+    <article class="card card--journal">
+      <h2 class="card__title" id="journal-title">what you remember</h2>
+      <ol class="journal" id="journal-list"></ol>
+      <button class="choice" id="journal-close" type="button">close</button>
+    </article>
+  </div>
+
+  <div class="overlay overlay--help" id="help" hidden role="dialog" aria-modal="true" aria-labelledby="help-heading">
+    <article class="card card--help">
+      <header class="help__head">
+        <span class="help__flame" aria-hidden="true"></span>
+        <div>
+          <h2 class="card__title help__heading" id="help-heading">how to keep the fire</h2>
+          <p class="help__sub">time stands still while you read</p>
+        </div>
+      </header>
+      <div class="help__body">
+        <nav class="help__nav" id="help-nav" role="tablist" aria-label="Guide sections"></nav>
+        <section class="help__page" id="help-page" role="tabpanel"></section>
+      </div>
+      <button class="choice help__close" id="help-close" type="button">back to the fire</button>
+    </article>
+  </div>
+
+  <div class="overlay overlay--curtain" id="curtain" role="dialog" aria-modal="true" aria-labelledby="curtain-title">
+    <article class="curtain">
+      <h2 class="curtain__title" id="curtain-title">Fugue</h2>
+      <div class="curtain__body" id="curtain-body"></div>
+      <div class="curtain__actions" id="curtain-actions"></div>
+    </article>
+  </div>
+
+  <div class="overlay overlay--pause" id="pause" hidden role="dialog" aria-modal="true" aria-labelledby="pause-title">
+    <article class="curtain">
+      <h2 class="curtain__title" id="pause-title">paused</h2>
+      <div class="curtain__body">
+        <p>the fire holds its breath.</p>
+      </div>
+      <div class="curtain__actions">
+        <button class="choice" id="pause-resume" type="button">resume</button>
+      </div>
+      <p class="curtain__hint">P or Esc to resume</p>
+    </article>
+  </div>
+
+  <noscript><p class="noscript">Fugue needs JavaScript to keep the fire burning.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

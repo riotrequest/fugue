@@ -1,0 +1,774 @@
+/* Fugue — night-forest palette: deep indigo ground, gold firelight. */
+
+:root {
+  --night-0: #05071a;
+  --night-1: #0a0e2a;
+  --night-2: #121842;
+  --night-3: #1c2560;
+  --line: #2a3478;
+  --text: #d8d3bd;
+  --muted: #7b83b4;
+  --faint: #4a5290;
+  --gold: #f2c14e;
+  --ember: #ff8a3d;
+  --good: #9ed07c;
+  --warn: #f2c14e;
+  --danger: #e8604f;
+  --memory: #b8a8ff;
+
+  --font-body: 'VT323', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --font-title: 'Press Start 2P', var(--font-body);
+  --gap: 12px;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { background: var(--night-0); }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--text);
+  font: 20px/1.25 var(--font-body);
+  background:
+    radial-gradient(ellipse at 50% 0%, #131a4a 0%, transparent 60%),
+    var(--night-0);
+  -webkit-font-smoothing: none;
+}
+
+h1, h2, h3, p, ol, ul { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
+[hidden] { display: none !important; }
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- layout ---------- */
+
+.app {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: var(--gap);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--gap);
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.topbar__title {
+  font: 16px/1 var(--font-title);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 2px 0 #7a4a12;
+}
+
+.topbar__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 14px;
+  color: var(--muted);
+}
+
+.topbar__status span:empty { display: none; }
+.topbar__status span + span::before { content: '· '; color: var(--faint); }
+
+.topbar__tools {
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.tool { color: var(--muted); }
+
+/* How many people have the game open, beside the tools. */
+.online { color: var(--muted); white-space: nowrap; }
+.online::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  vertical-align: middle;
+  background: var(--ember);
+  box-shadow: 0 0 6px var(--ember);
+  animation: pulse 2.4s steps(2) infinite;
+}
+.tool:hover { color: var(--gold); }
+.tool--new { color: var(--memory); animation: pulse 1.6s steps(4) infinite; }
+
+/* ---------- the scene ---------- */
+
+.stage {
+  position: relative;
+  justify-self: center;
+  width: min(100%, calc(46dvh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--line);
+  box-shadow: 0 0 0 2px var(--night-0), 0 0 60px #0008;
+  background: var(--night-1);
+  overflow: hidden;
+}
+
+.stage__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.stage__caption {
+  position: absolute;
+  inset: auto 0 6px;
+  text-align: center;
+  color: var(--gold);
+  text-shadow: 0 1px 0 #000, 0 0 8px #000;
+  pointer-events: none;
+}
+
+/* ---------- vitals overlaid on the scene ---------- */
+
+/* Top-right of the picture, so fire, warmth, food and water are always in view. */
+.stage .stage__hud {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: clamp(180px, 32%, 260px);
+  margin: 0;
+  padding: 6px 8px 3px;
+  font-size: 16px;
+  line-height: 1.1;
+  background: #05071acc;
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 10px #0008;
+}
+
+.stage .stage__hud:empty { display: none; }
+
+.stage__hud .vital {
+  grid-template-columns: 4em minmax(0, 1fr) 4.6em;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.stage__hud .vital__label { color: var(--text); }
+.stage__hud .vital__note { min-width: 0; font-size: 14px; }
+.stage__hud .vital__bar { height: 7px; }
+.stage__hud .vital--danger .vital__label { color: var(--danger); }
+
+/* Small screens: a slim strip across the top, label over bar, no notes. */
+@media (max-width: 599px) {
+  .stage .stage__hud {
+    left: 4px;
+    right: 4px;
+    top: 4px;
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 6px;
+    padding: 4px 6px;
+    font-size: 14px;
+  }
+
+  .stage__hud .vital { grid-template-columns: 1fr; gap: 2px; margin: 0; }
+  .stage__hud .vital__note { display: none; }
+  .stage__hud .vital__bar { height: 5px; }
+}
+
+/* ---------- console ---------- */
+
+.console {
+  display: grid;
+  gap: var(--gap);
+  min-height: 0;
+}
+
+.panel {
+  min-width: 0;
+  padding: 10px 12px;
+  background: linear-gradient(#0d1233cc, #0a0e2acc);
+  border: 2px solid var(--line);
+}
+
+.panel__title,
+.group__title {
+  font-size: 16px;
+  font-weight: normal;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 6px;
+}
+
+/* Wide screens: stores to the left of the scene, the voices to the right. */
+@media (min-width: 900px) {
+  .app {
+    height: 100dvh;
+    max-width: 1320px;
+    grid-template-columns: minmax(170px, 1fr) minmax(0, calc(46dvh * 16 / 9)) minmax(170px, 1fr);
+    grid-template-areas:
+      'top top top'
+      'stores stage people'
+      'console console console';
+  }
+
+  .topbar { grid-area: top; }
+  .stage { grid-area: stage; }
+  .console { grid-area: console; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); }
+  .rail--stores { grid-area: stores; justify-self: end; }
+  .rail--people { grid-area: people; justify-self: start; }
+
+  /* As tall as the scene and no taller; long lists scroll inside. */
+  .rail { width: min(100%, 260px); contain: size; }
+
+  /* Only the buttons scroll; the hint line stays pinned under them. */
+  .panel--actions { display: flex; flex-direction: column; overflow: hidden; }
+  .panel--actions .actions {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .panel--actions .hint { flex: 0 0 auto; }
+
+  .panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  .panel--log { overflow: hidden; }
+}
+
+@media (max-width: 899px) {
+  .panel--actions { order: -1; }
+  .log { max-height: 40dvh; overflow: hidden; }
+  .rail { order: 1; }
+  /* The page scrolls here, so the hint line rides along the bottom of the screen. */
+  .panel--actions .hint { position: sticky; bottom: 0; background: var(--night-1); padding-bottom: 6px; }
+}
+
+/* ---------- log ---------- */
+
+.panel--log {
+  mask-image: linear-gradient(#000 55%, transparent 100%);
+}
+
+.log__line {
+  margin-bottom: 6px;
+  animation: arrive 0.5s ease-out;
+}
+
+.log__line--good { color: var(--good); }
+.log__line--warn { color: var(--warn); }
+.log__line--danger { color: var(--danger); }
+.log__line--memory { color: var(--memory); font-style: italic; }
+.log__line--voice { color: var(--gold); }
+.log__line--voice::before { content: '“'; }
+.log__line--voice::after { content: '”'; }
+
+.log__line--day {
+  color: var(--faint);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 16px;
+}
+
+.log__line:nth-child(n + 8) { opacity: 0.8; }
+.log__line:nth-child(n + 14) { opacity: 0.6; }
+
+/* ---------- actions ---------- */
+
+.group { margin-bottom: 12px; }
+
+.group__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+
+.action {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 5px 9px;
+  text-align: left;
+  border: 2px solid var(--muted);
+  background: var(--night-2);
+  overflow: hidden;
+  animation: arrive 0.6s ease-out;
+  transition: border-color 0.12s, background-color 0.12s, transform 0.05s;
+}
+
+.action:hover { border-color: var(--gold); background: var(--night-3); }
+.action:active { transform: translateY(1px); }
+
+.action[aria-disabled='true'] {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: default;
+}
+
+.action[aria-disabled='true']:hover { border-color: var(--faint); background: var(--night-2); }
+
+.action__fill {
+  position: absolute;
+  inset: 0;
+  background: #f2c14e2e;
+  transform: scaleX(var(--cooldown, 0));
+  transform-origin: left;
+  transition: transform 0.2s linear;
+  pointer-events: none;
+}
+
+.action__label,
+.action__cost,
+.action__note { position: relative; display: block; }
+
+.action__cost {
+  font-size: 16px;
+  line-height: 1.1;
+  color: var(--muted);
+}
+
+.action__cost:empty { display: none; }
+
+.action__note {
+  font-size: 16px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--warn);
+  opacity: 0.85;
+}
+
+.action__note:empty { display: none; }
+.cost--short { color: var(--danger); }
+.cost + .cost::before { content: ' · '; color: var(--faint); }
+
+/* Says how to use it until something is pointed at (only where there is a mouse). */
+@media (hover: hover) {
+  .hint:empty::before { content: 'point at a button to see what it does'; color: var(--faint); }
+}
+
+.hint {
+  min-height: 2.5em;
+  color: var(--muted);
+  border-top: 1px dashed var(--line);
+  padding-top: 6px;
+}
+
+/* ---------- rails: stores and the voices ---------- */
+
+.rail { font-size: 18px; line-height: 1.2; }
+.rail:empty { display: none; }
+.rail .group__title { font-size: 14px; margin-bottom: 3px; }
+
+.people__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.people__num {
+  font: 22px/1 var(--font-title);
+  color: var(--gold);
+  text-shadow: 0 2px 0 #7a4a12;
+}
+
+.people__at { color: var(--text); }
+
+.vital {
+  display: grid;
+  grid-template-columns: 4.6em 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.vital__label { color: var(--muted); }
+.vital__note { color: var(--muted); font-size: 16px; min-width: 4.5em; text-align: right; }
+
+.vital__bar {
+  height: 8px;
+  background: var(--night-0);
+  border: 1px solid var(--line);
+}
+
+.vital__fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--good);
+  transform: scaleX(var(--value, 0));
+  transform-origin: left;
+  transition: transform 0.4s linear, background-color 0.4s;
+}
+
+.vital--fire .vital__fill { background: var(--ember); }
+.vital--warn .vital__fill { background: var(--warn); }
+.vital--danger .vital__fill { background: var(--danger); }
+.vital--danger .vital__note { color: var(--danger); animation: pulse 1s steps(2) infinite; }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.row__label { color: var(--text); }
+.row__value { color: var(--gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row__cap { color: var(--muted); }
+.row--changed .row__value { animation: flash 0.6s ease-out; }
+
+.stores__group { margin-bottom: 10px; }
+
+.people__summary { color: var(--muted); margin-bottom: 8px; font-size: 16px; }
+.people__summary--full { color: var(--warn); }
+
+.role {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.role__label { min-width: 0; }
+.role__name,
+.role__tool { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Tools in hand for the job, under its name; gold when some workers go without. */
+.role__tool { font-size: 14px; line-height: 1; margin: -2px 0 3px; color: var(--muted); }
+.role__tool:empty { display: none; }
+.role__tool--short { color: var(--warn); }
+
+/* Someone left this job without the player moving them: make it impossible to miss. */
+.role--lost { animation: lost 4s ease-out; }
+.role--lost .role__label,
+.role--lost .stepper__count { color: var(--danger); }
+
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper__count { min-width: 2ch; text-align: center; color: var(--gold); }
+
+.stepper__btn {
+  width: 22px;
+  height: 22px;
+  line-height: 18px;
+  text-align: center;
+  border: 1px solid var(--muted);
+  background: var(--night-2);
+}
+
+.stepper__btn:hover { border-color: var(--gold); color: var(--gold); }
+.stepper__btn[aria-disabled='true'] { border-color: var(--line); color: var(--faint); cursor: default; }
+
+/* ---------- overlays ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #05071acc;
+  animation: fade 0.35s ease-out;
+  overflow-y: auto;
+}
+
+.card {
+  width: min(560px, 100%);
+  padding: 18px 20px;
+  background: var(--night-1);
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 2px var(--night-0), 0 0 0 4px #7a4a12, 0 20px 60px #000a;
+  animation: rise 0.35s ease-out;
+}
+
+.card--danger { border-color: var(--danger); }
+.card--memory { border-color: var(--memory); }
+.card--memory .card__body { color: #d9d0ff; font-style: italic; }
+
+.card__title {
+  font: 12px/1.5 var(--font-title);
+  font-weight: normal;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+
+.card--danger .card__title { color: var(--danger); }
+.card--memory .card__title { color: var(--memory); }
+
+.card__body p { margin-bottom: 10px; }
+
+.card__choices { display: grid; gap: 6px; margin-top: 14px; }
+
+.choice {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  text-align: left;
+  border: 2px solid var(--muted);
+  background: var(--night-2);
+}
+
+.choice:hover { border-color: var(--gold); background: var(--night-3); }
+.choice[aria-disabled='true'] { border-color: var(--line); color: var(--faint); cursor: default; }
+.choice__key { color: var(--gold); margin-right: 8px; }
+.choice__hint { display: block; font-size: 16px; color: var(--muted); padding-left: 1.6em; }
+
+.card--journal { max-height: 86dvh; overflow-y: auto; border-color: var(--memory); }
+.card--journal .card__title { color: var(--memory); }
+.journal { display: grid; gap: 12px; margin-bottom: 14px; }
+.journal__title { color: var(--memory); }
+.journal__text { color: #d9d0ff; font-style: italic; }
+.journal__entry--lost { color: var(--faint); letter-spacing: 4px; }
+
+.overlay--curtain { background: #05071ad9; z-index: 20; }
+
+.curtain {
+  width: min(600px, 100%);
+  text-align: center;
+  animation: rise 0.8s ease-out;
+}
+
+.curtain__title {
+  font: 34px/1.3 var(--font-title);
+  font-weight: normal;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 4px 0 #7a4a12, 0 0 40px #f2c14e55;
+  margin-bottom: 22px;
+}
+
+.curtain--ending .curtain__title { font-size: 18px; letter-spacing: 3px; }
+
+.curtain__body { color: var(--text); margin-bottom: 24px; }
+.curtain__body p { margin-bottom: 10px; }
+.curtain__actions { display: grid; gap: 8px; justify-content: center; }
+.curtain__actions .choice { min-width: 240px; text-align: center; }
+
+/* Difficulty, picked on the title screen of a new game. */
+.difficulty { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
+.difficulty__option {
+  min-width: 84px;
+  padding: 3px 10px;
+  color: var(--muted);
+  border: 2px solid var(--line);
+  background: var(--night-2);
+}
+.difficulty__option:hover { color: var(--text); border-color: var(--muted); }
+.difficulty__option[aria-pressed='true'] { color: var(--gold); border-color: var(--gold); }
+.difficulty__hint { margin-top: 6px; font-size: 16px; color: var(--muted); }
+.choice--quiet { border-color: transparent; background: none; color: var(--muted); }
+
+/* Above every other overlay: a pause can land on top of an open card. */
+.overlay--pause { z-index: 30; }
+.overlay--pause .curtain { animation-duration: 0.35s; }
+.overlay--pause .curtain__title { font-size: 18px; letter-spacing: 6px; }
+.curtain__hint { margin-top: 14px; font-size: 16px; color: var(--faint); }
+
+.noscript { padding: 24px; text-align: center; }
+
+/* ---------- the guide ---------- */
+
+/* Above the title curtain, so it opens from the title screen; under the pause veil. */
+.overlay--help { z-index: 25; }
+
+.card--help {
+  width: min(780px, 100%);
+  max-height: 90dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.help__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.help__heading { margin-bottom: 4px; font-size: 14px; }
+.help__sub { color: var(--faint); font-size: 16px; }
+
+/* The favicon's pixel flame, flickering in four hard steps. */
+.help__flame {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cpath d='M3 1h1v1h1v2h1v2H5v1H3V6H2V4h1z' fill='%23f2c14e'/%3E%3Cpath d='M3 4h2v2H3z' fill='%23ff8a3d'/%3E%3C/svg%3E") center / contain no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 8px #ff8a3d88);
+  animation: flicker 0.8s steps(4) infinite;
+}
+
+.help__body {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 20px;
+  min-height: 0;
+}
+
+.help__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.help__tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  text-align: left;
+  color: var(--muted);
+  border-left: 3px solid transparent;
+}
+
+.help__tab:hover { color: var(--text); background: var(--night-2); }
+
+.help__tab[aria-selected='true'] {
+  color: var(--gold);
+  background: var(--night-2);
+  border-left-color: var(--gold);
+}
+
+.help__tab[aria-disabled='true'] { color: var(--faint); letter-spacing: 3px; cursor: default; }
+.help__tab[aria-disabled='true']:hover { background: none; color: var(--faint); }
+
+.help__dot { width: 6px; height: 6px; flex: none; }
+.help__tab--fresh .help__dot { background: var(--gold); animation: pulse 1.2s steps(2) infinite; }
+
+.help__page {
+  min-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+  animation: arrive 0.3s ease-out;
+}
+
+.help__num { font: 10px/1 var(--font-title); color: var(--faint); letter-spacing: 2px; margin-bottom: 10px; }
+
+.help__title {
+  font: 16px/1.4 var(--font-title);
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-shadow: 0 2px 0 #7a4a12;
+  margin-bottom: 10px;
+}
+
+.help__lead { font-size: 24px; color: var(--text); margin-bottom: 16px; }
+
+.help__points { display: grid; gap: 10px; }
+
+.help__point {
+  position: relative;
+  padding-left: 20px;
+  color: var(--text);
+}
+
+.help__point::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.45em;
+  width: 6px;
+  height: 6px;
+  background: var(--ember);
+  box-shadow: 0 0 6px #ff8a3d99;
+}
+
+.help__point--keys { display: flex; align-items: center; gap: 14px; padding-left: 0; }
+.help__point--keys::before { display: none; }
+
+.help__keys { display: flex; align-items: center; gap: 6px; min-width: 7.5em; }
+.help__sep { color: var(--faint); }
+
+kbd {
+  display: inline-block;
+  min-width: 1.8em;
+  padding: 0 6px;
+  font: inherit;
+  text-align: center;
+  color: var(--gold);
+  background: var(--night-2);
+  border: 2px solid var(--muted);
+  border-bottom-width: 4px;
+}
+
+.help__close { justify-self: center; width: auto; min-width: 240px; text-align: center; }
+
+/* Phones: tabs wrap into a row above the page. */
+@media (max-width: 639px) {
+  .card--help { padding: 14px; }
+  .help__body { grid-template-columns: 1fr; gap: 12px; }
+  .help__nav { flex-direction: row; flex-wrap: wrap; overflow: visible; }
+  .help__tab { border-left: 0; border-bottom: 3px solid transparent; padding: 2px 8px; }
+  .help__tab[aria-selected='true'] { border-bottom-color: var(--gold); }
+  .help__page { min-height: 0; }
+  .help__lead { font-size: 22px; }
+}
+
+/* ---------- motion ---------- */
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes flash {
+  from { color: #fff; }
+}
+
+@keyframes lost {
+  0%, 20%, 40% { background-color: #e8604f55; }
+  10%, 30% { background-color: transparent; }
+  100% { background-color: transparent; }
+}
+
+@keyframes flicker {
+  25% { transform: scaleY(0.92) translateY(1px); }
+  50% { transform: scaleX(0.94); filter: drop-shadow(0 0 12px #ff8a3daa); }
+  75% { transform: scaleY(1.05) translateY(-1px); }
+}
+
+@keyframes pulse {
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

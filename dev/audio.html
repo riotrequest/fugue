@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fugue — audio harness</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e0d0c;
+      --panel: #171513;
+      --line: #2b2723;
+      --text: #d8d0c4;
+      --dim: #8a8175;
+      --ember: #e0843a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 16px 64px;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+    }
+    main { max-width: 760px; margin: 0 auto; }
+    h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; letter-spacing: 0.04em; }
+    h2 { margin: 0 0 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+    p { margin: 0 0 24px; color: var(--dim); }
+    section { margin-top: 16px; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+    .row { display: grid; grid-template-columns: 150px 1fr 56px; gap: 12px; align-items: center; min-height: 32px; }
+    .row output { text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    input[type="range"] { width: 100%; accent-color: var(--ember); }
+    input[type="checkbox"] { justify-self: start; width: 16px; height: 16px; accent-color: var(--ember); }
+    select, button {
+      font: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 6px 12px;
+    }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--ember); }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+    button.primary { border-color: var(--ember); color: var(--ember); }
+    button[aria-pressed="true"] { background: var(--ember); border-color: var(--ember); color: var(--bg); }
+    @media (max-width: 520px) {
+      .row { grid-template-columns: 1fr 48px; }
+      .row label { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Fugue — audio harness</h1>
+    <p>Everything here is synthesised live. Enable audio, then move the scene around.</p>
+
+    <section>
+      <h2>Output</h2>
+      <div class="buttons" style="margin-bottom: 12px">
+        <button id="unlock" class="primary" type="button">Enable audio</button>
+        <button id="mute" type="button" aria-pressed="false">Mute</button>
+        <button id="pause" type="button" aria-pressed="false">Pause</button>
+      </div>
+      <div class="row">
+        <label for="volume">volume</label>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.7">
+        <output for="volume"></output>
+      </div>
+    </section>
+
+    <section>
+      <h2>Scene view</h2>
+      <div id="scene"></div>
+    </section>
+
+    <section>
+      <h2>Presets</h2>
+      <div id="presets" class="buttons"></div>
+    </section>
+
+    <section>
+      <h2>Effects</h2>
+      <div id="sfx" class="buttons"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createAudio } from '../js/audio/audio.js';
+    import { SFX_NAMES } from '../js/audio/sfx.js';
+
+    const UPDATE_INTERVAL_MS = 50;
+    const WEATHERS = ['clear', 'rain', 'snow', 'fog', 'ash'];
+    const MAX_PEOPLE = 6;
+
+    /** Scene fields rendered as 0..1 sliders, with their starting values. */
+    const SLIDERS = { time: 0, fire: 0.5, weatherIntensity: 0.5, wind: 0.3, cold: 0, threat: 0 };
+
+    const PRESETS = {
+      'alone at night': { time: 0, fire: 0.5, weather: 'clear', wind: 0.3, cold: 0, threat: 0, people: 0, beacon: false, ended: false },
+      'embers at dawn': { time: 0.25, fire: 0.15, weather: 'fog', weatherIntensity: 0.6, wind: 0.1, cold: 0.2, threat: 0, people: 1, beacon: false, ended: false },
+      'roaring, in rain': { time: 0.9, fire: 1, weather: 'rain', weatherIntensity: 0.8, wind: 0.5, cold: 0.1, threat: 0, people: 3, beacon: false, ended: false },
+      'deep winter': { time: 0.05, fire: 0.6, weather: 'snow', weatherIntensity: 0.7, wind: 0.8, cold: 1, threat: 0.2, people: 2, beacon: true, ended: false },
+      'something out there': { time: 0.95, fire: 0.3, weather: 'ash', weatherIntensity: 0.6, wind: 0.4, cold: 0.4, threat: 0.9, people: 1, beacon: false, ended: false },
+      'the end': { ended: true },
+    };
+
+    const audio = createAudio();
+    const view = { ...SLIDERS, weather: 'clear', people: [], beacon: false, ended: null };
+
+    /** Re-reads each control from `view`; filled as the controls are built. */
+    const refreshers = [];
+    const refresh = () => refreshers.forEach((sync) => sync());
+
+    /**
+     * Adds a labelled control row to the scene panel.
+     * @param {string} name
+     * @param {HTMLElement} control
+     * @param {() => string} [describe] text for the value column
+     */
+    function addRow(name, control, describe) {
+      const row = document.createElement('div');
+      const label = document.createElement('label');
+      const output = document.createElement('output');
+      row.className = 'row';
+      control.id = `view-${name}`;
+      label.htmlFor = control.id;
+      label.textContent = name;
+      row.append(label, control, output);
+      document.getElementById('scene').append(row);
+      if (describe) refreshers.push(() => { output.textContent = describe(); });
+    }
+
+    for (const name of Object.keys(SLIDERS)) {
+      const slider = Object.assign(document.createElement('input'), { type: 'range', min: 0, max: 1, step: 0.01 });
+      slider.addEventListener('input', () => { view[name] = slider.valueAsNumber; refresh(); });
+      refreshers.push(() => { slider.value = view[name]; });
+      addRow(name, slider, () => view[name].toFixed(2));
+    }
+
+    const weather = document.createElement('select');
+    weather.append(...WEATHERS.map((name) => new Option(name)));
+    weather.addEventListener('change', () => { view.weather = weather.value; });
+    refreshers.push(() => { weather.value = view.weather; });
+    addRow('weather', weather);
+
+    const people = Object.assign(document.createElement('input'), { type: 'range', min: 0, max: MAX_PEOPLE, step: 1 });
+    people.addEventListener('input', () => { view.people = Array.from({ length: people.valueAsNumber }, (_, i) => ({ id: i })); refresh(); });
+    refreshers.push(() => { people.value = view.people.length; });
+    addRow('people', people, () => String(view.people.length));
+
+    const beacon = Object.assign(document.createElement('input'), { type: 'checkbox' });
+    beacon.addEventListener('change', () => { view.beacon = beacon.checked; });
+    refreshers.push(() => { beacon.checked = view.beacon; });
+    addRow('beacon', beacon);
+
+    const ended = Object.assign(document.createElement('input'), { type: 'checkbox' });
+    ended.addEventListener('change', () => { view.ended = ended.checked ? 'harness' : null; });
+    refreshers.push(() => { ended.checked = Boolean(view.ended); });
+    addRow('ended', ended);
+
+    for (const [name, preset] of Object.entries(PRESETS)) {
+      const button = Object.assign(document.createElement('button'), { type: 'button', textContent: name });
+      button.addEventListener('click', () => {
+        const { people: count, ended: over, ...fields } = preset;
+        Object.assign(view, fields);
+        if (count !== undefined) view.people = Array.from({ length: count }, (_, i) => ({ id: i }));
+        if (over !== undefined) view.ended = over ? 'harness' : null;
+        refresh();
+      });
+      document.getElementById('presets').append(button);
+    }
+
+    for (const name of SFX_NAMES) {
+      const button = Object.assign(document.createElement('button'), { type: 'button', textContent: name });
+      button.addEventListener('click', () => audio.sfx(name));
+      document.getElementById('sfx').append(button);
+    }
+
+    const unlock = document.getElementById('unlock');
+    unlock.addEventListener('click', () => {
+      audio.unlock();
+      audio.sfx('unlock');
+      unlock.textContent = 'Audio enabled';
+      unlock.classList.remove('primary');
+    });
+
+    const mute = document.getElementById('mute');
+    mute.addEventListener('click', () => {
+      audio.setMuted(!audio.isMuted());
+      mute.setAttribute('aria-pressed', String(audio.isMuted()));
+    });
+
+    const pause = document.getElementById('pause');
+    pause.addEventListener('click', () => {
+      const paused = pause.getAttribute('aria-pressed') !== 'true';
+      audio.setPaused(paused);
+      pause.setAttribute('aria-pressed', String(paused));
+    });
+
+    const volume = document.getElementById('volume');
+    const volumeOutput = document.querySelector('output[for="volume"]');
+    const applyVolume = () => {
+      audio.setVolume(volume.valueAsNumber);
+      volumeOutput.textContent = volume.valueAsNumber.toFixed(2);
+    };
+    volume.addEventListener('input', applyVolume);
+    applyVolume();
+
+    refresh();
+    setInterval(() => audio.update(view, UPDATE_INTERVAL_MS / 1000), UPDATE_INTERVAL_MS);
+  </script>
+</body>
+</html>

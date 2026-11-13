@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fugue: scene harness</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 16px; background: #0b0c12; color: #c9c7bd; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  main { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+  canvas { width: 960px; max-width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; background: #000; display: block; }
+  #stats { margin-top: 8px; color: #8f8d84; }
+  form { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; min-width: 320px; max-width: 420px; }
+  form output { min-width: 3.5em; text-align: right; color: #8f8d84; }
+  fieldset { grid-column: 1 / -1; border: 1px solid #2a2c38; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  legend { color: #8f8d84; }
+  button, select { font: inherit; background: #1b1d28; color: inherit; border: 1px solid #343747; padding: 3px 8px; border-radius: 3px; }
+  button:hover { background: #262938; }
+  input[type=range] { width: 100%; }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <canvas id="scene"></canvas>
+    <div id="stats">starting…</div>
+  </div>
+  <form id="controls" onsubmit="return false"></form>
+</main>
+
+<script type="module">
+import { createScene } from '../js/render/scene.js';
+
+const STRUCTURES = ['leanto', 'rack', 'raincatcher', 'shed', 'snares', 'workbench', 'garden', 'cabin', 'palisade', 'smokehouse', 'watchtower', 'radio'];
+const PULSES = ['stoke', 'arrive', 'danger', 'memory', 'build'];
+const WEATHERS = ['clear', 'rain', 'snow', 'fog', 'ash'];
+const PLAYER_POSES = ['sitting', 'asleep', 'tending', 'away'];
+const PEOPLE_POSES = ['mixed', 'sitting', 'sleeping', 'standing', 'working', 'away'];
+const MIXED = ['sitting', 'sleeping', 'sitting', 'standing', 'working', 'sitting', 'sleeping', 'working'];
+const SEEDS = [1187, 20231, 5, 90412, 7741, 313, 68000, 4242];
+const SLIDERS = ['time', 'fire', 'weatherIntensity', 'wind', 'cold', 'wood', 'threat'];
+/** Seconds for one full day when the auto cycle is on. */
+const DAY_SECONDS = 60;
+
+const view = {
+  time: 0, day: 1, fire: 0.6, weather: 'clear', weatherIntensity: 0.6, wind: 0.2, cold: 0, wood: 0.6,
+  player: 'sitting', people: [], structures: [], threat: 0, beacon: false, ended: null,
+};
+const harness = { peopleCount: 4, peoplePose: 'mixed', autoCycle: false, paused: false };
+
+function syncPeople() {
+  view.people = SEEDS.slice(0, harness.peopleCount).map((seed, i) => ({
+    id: `survivor-${i}`,
+    seed,
+    pose: harness.peoplePose === 'mixed' ? MIXED[i] : harness.peoplePose,
+  }));
+}
+
+const form = document.getElementById('controls');
+const refreshers = [];
+const el = (tag, props = {}, ...children) => {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children);
+  return node;
+};
+const row = (label, control, readout = el('span')) => form.append(el('label', { textContent: label }), control, readout);
+
+function slider(label, get, set, max = 1, step = 0.01) {
+  const input = el('input', { type: 'range', min: 0, max, step });
+  const out = el('output');
+  const refresh = () => {
+    input.value = get();
+    out.textContent = Number(get()).toFixed(step < 1 ? 2 : 0);
+  };
+  input.addEventListener('input', () => { set(Number(input.value)); refresh(); });
+  refreshers.push(refresh);
+  row(label, input, out);
+}
+
+function select(label, options, get, set) {
+  const input = el('select', {}, ...options.map((o) => el('option', { value: o, textContent: o })));
+  input.addEventListener('change', () => set(input.value));
+  refreshers.push(() => { input.value = get(); });
+  row(label, input);
+}
+
+function checkbox(label, get, set) {
+  const input = el('input', { type: 'checkbox' });
+  input.addEventListener('change', () => set(input.checked));
+  refreshers.push(() => { input.checked = get(); });
+  return el('label', {}, input, ` ${label}`);
+}
+
+for (const key of SLIDERS) slider(key, () => view[key], (v) => { view[key] = v; });
+slider('day', () => view.day, (v) => { view.day = v; }, 60, 1);
+select('weather', WEATHERS, () => view.weather, (v) => { view.weather = v; });
+select('player', PLAYER_POSES, () => view.player, (v) => { view.player = v; });
+slider('people', () => harness.peopleCount, (v) => { harness.peopleCount = v; syncPeople(); }, 8, 1);
+select('people pose', PEOPLE_POSES, () => harness.peoplePose, (v) => { harness.peoplePose = v; syncPeople(); });
+
+const structureBox = el('fieldset', {}, el('legend', { textContent: 'structures' }));
+for (const id of STRUCTURES) {
+  structureBox.append(checkbox(id, () => view.structures.includes(id), (on) => {
+    view.structures = STRUCTURES.filter((s) => (s === id ? on : view.structures.includes(s)));
+  }));
+}
+structureBox.append(
+  el('button', { type: 'button', textContent: 'all', onclick: () => { view.structures = [...STRUCTURES]; refresh(); } }),
+  el('button', { type: 'button', textContent: 'none', onclick: () => { view.structures = []; refresh(); } }),
+);
+form.append(structureBox);
+
+form.append(el('fieldset', {}, el('legend', { textContent: 'flags' }),
+  checkbox('beacon', () => view.beacon, (on) => { view.beacon = on; }),
+  checkbox('ended', () => view.ended !== null, (on) => { view.ended = on ? 'dark' : null; }),
+  checkbox('auto day cycle', () => harness.autoCycle, (on) => { harness.autoCycle = on; }),
+  checkbox('pause', () => harness.paused, (on) => { harness.paused = on; }),
+));
+
+const scene = createScene(document.getElementById('scene'));
+form.append(el('fieldset', {}, el('legend', { textContent: 'pulse' }),
+  ...PULSES.map((kind) => el('button', { type: 'button', textContent: kind, onclick: () => scene.pulse(kind) })),
+));
+
+function refresh() {
+  for (const fn of refreshers) fn();
+}
+
+/** Console/automation hook: `harness.set({ time: 0.5, fire: 1 })`. */
+window.harness = {
+  view,
+  scene,
+  set(patch = {}) {
+    for (const [key, value] of Object.entries(patch)) {
+      if (key in harness) harness[key] = value;
+      else view[key] = value;
+    }
+    syncPeople();
+    refresh();
+  },
+};
+
+syncPeople();
+refresh();
+
+const stats = document.getElementById('stats');
+let last = performance.now();
+let frames = 0;
+let cost = 0;
+let worst = 0;
+let windowStart = last;
+
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  if (!harness.paused) {
+    if (harness.autoCycle) {
+      view.time += dt / DAY_SECONDS;
+      if (view.time >= 1) { view.time -= 1; view.day += 1; }
+      refresh();
+    }
+    const start = performance.now();
+    scene.update(view, dt);
+    scene.render();
+    const spent = performance.now() - start;
+    cost += spent;
+    worst = Math.max(worst, spent);
+    frames++;
+  }
+  if (now - windowStart >= 500 && frames > 0) {
+    const fps = (frames * 1000) / (now - windowStart);
+    stats.textContent = `${fps.toFixed(0)} fps · update+render ${(cost / frames).toFixed(2)} ms avg, ${worst.toFixed(2)} ms worst`;
+    frames = 0;
+    cost = 0;
+    worst = 0;
+    windowStart = now;
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

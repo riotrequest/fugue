@@ -1,0 +1,20 @@
+{
+  "name": "fugue",
+  "version": "1.0.0",
+  "description": "A pixel-art survival game in the browser: keep the fire alive after the end of the world.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test tests/"
+  },
+  "license": "MIT",
+  "homepage": "https://fugue.riotrequest.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/riotrequest/fugue.git"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
