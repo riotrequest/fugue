@@ -23,14 +23,14 @@ export function coldOf(state) {
 
 /**
  * Where the year stands, for the top bar: late autumn, winter, deep winter
- * with a count of days to the thaw, then spring.
+ * with a count of days to the thaw ("deep winter, thaw in 3 days"), then spring.
  */
 export function seasonOf(state) {
   if (state.flags['done:thaw']) return 'spring';
   const { day } = state.clock;
   if (day >= SEASON.deepWinterDay) {
     const left = SEASON.thawDay - day;
-    return left > 1 ? `deep winter · thaw in ${left} days` : 'deep winter · thaw at dawn';
+    return left > 1 ? `deep winter, thaw in ${left} days` : 'deep winter, thaw at dawn';
   }
   return coldOf(state) >= SEASON.strettoCold ? 'winter' : 'late autumn';
 }

@@ -64,11 +64,13 @@ button {
   padding: var(--gap);
 }
 
+/* Three parts: where you are (title, chapter, day, season, weather), who else is
+   here, and the tools. Each reads as its own group even when they wrap. */
 .topbar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 6px 18px;
+  gap: 8px 20px;
 }
 
 .topbar__title {
@@ -82,23 +84,46 @@ button {
 .topbar__status {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 14px;
+  align-items: center;
+  row-gap: 4px;
   color: var(--muted);
+  line-height: 1.1;
 }
 
+.topbar__status span { padding: 0 12px; white-space: nowrap; }
 .topbar__status span:empty { display: none; }
-.topbar__status span + span::before { content: '· '; color: var(--faint); }
+.topbar__status span + span { border-left: 1px solid var(--line); }
+.topbar__status #hud-chapter { padding-left: 0; color: var(--text); letter-spacing: 1px; }
+.topbar__status .hud--warn { color: var(--warn); }
 
 .topbar__tools {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
 }
 
-.tool { color: var(--muted); }
+.tool {
+  padding: 1px 9px;
+  color: var(--muted);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
 
-/* How many people have the game open, beside the tools. */
-.online { color: var(--muted); white-space: nowrap; }
+/* Starting over sits a little apart, and warns on hover. */
+#btn-restart { margin-left: 10px; }
+#btn-restart:hover { color: var(--danger); border-color: var(--danger); }
+
+/* How many people have the game open: its own little badge, before the tools. */
+.online {
+  margin-right: 12px;
+  padding: 1px 10px;
+  color: var(--text);
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: var(--night-1);
+}
 .online::before {
   content: '';
   display: inline-block;
@@ -110,7 +135,17 @@ button {
   box-shadow: 0 0 6px var(--ember);
   animation: pulse 2.4s steps(2) infinite;
 }
-.tool:hover { color: var(--gold); }
+.tool:hover { color: var(--gold); border-color: var(--line); background: var(--night-2); }
+
+/* Phones: the tools get a full row of their own, packed tighter. */
+@media (max-width: 599px) {
+  .topbar { gap: 6px 12px; }
+  .topbar__status span { padding: 0 8px; }
+  .topbar__tools { width: 100%; margin-left: 0; gap: 2px 0; font-size: 18px; }
+  .tool { padding: 1px 6px; }
+  .online { margin-right: 6px; padding: 0 8px; }
+  #btn-restart { margin-left: auto; }
+}
 .tool--new { color: var(--memory); animation: pulse 1.6s steps(4) infinite; }
 
 /* ---------- the scene ---------- */

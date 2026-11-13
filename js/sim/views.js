@@ -28,7 +28,7 @@ import { weatherOf } from './systems/weather.js';
  * @property {string} weather       weather id
  * @property {string} weatherLabel
  * @property {string} chapter       e.g. 'I · Subject'
- * @property {string} season        e.g. 'late autumn', 'deep winter · thaw in 3 days'
+ * @property {string} season        e.g. 'late autumn', 'deep winter, thaw in 3 days'
  * @property {string} difficulty    'easy' | 'normal' | 'hard'
  * @property {string} fireLabel     e.g. 'the fire is roaring'
  * @property {{ id: string, title: string, text: string }|null} ended

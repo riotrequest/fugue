@@ -21,7 +21,7 @@ export function startOnline(node) {
 
   const show = (count) => {
     node.hidden = !(count >= 1);
-    if (count >= 1) node.textContent = count === 1 ? 'just you, tonight' : `${count} playing`;
+    if (count >= 1) node.textContent = `${count} playing`;
     node.title = 'people with the game open right now';
   };
 

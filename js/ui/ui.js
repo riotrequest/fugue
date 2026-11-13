@@ -1,5 +1,5 @@
 import { createActions } from './actions.js';
-import { byId, setText } from './dom.js';
+import { byId, setClass, setText } from './dom.js';
 import { createLog } from './journal.js';
 import { createCurtain, createEventCard, createJournal } from './overlays.js';
 import { createHelp } from './help.js';
@@ -20,6 +20,7 @@ function createHud(game) {
       setText(chapter, status.chapter ?? '');
       setText(clock, status.clock ?? '');
       setText(season, status.season ?? '');
+      setClass(season, 'hud--warn', (status.season ?? '').startsWith('deep winter'));
       setText(weather, status.weatherLabel ?? '');
       setText(fire, status.fireLabel ?? '');
     },
