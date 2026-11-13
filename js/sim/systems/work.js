@@ -40,12 +40,15 @@ function workTurn(sim, role, worker, workers) {
   for (const [id, count] of Object.entries(state.resources)) tally(state, id, count - (before[id] ?? 0));
 }
 
+/** Jobs that stop when it gets dark, out in the woods or not. */
+export const offAtNight = (role) => Boolean(role?.outdoors || role?.dayShift);
+
 export function stepWork(sim, dt) {
   const { state } = sim;
   const night = phaseOf(state) === 'night';
 
   for (const role of ROLES) {
-    if (!role.period || (role.outdoors && night)) continue;
+    if (!role.period || (night && offAtNight(role))) continue;
     const workers = state.people.filter((person) => person.role === role.id);
     if (workers.length === 0) continue;
     const pace = 1 + (role.hasten ? bonus(state, role.hasten) : 0);

@@ -14,6 +14,7 @@ import { indexById } from '../util.js';
  * @property {object} [when]        condition for the role to exist
  * @property {number} [period]      seconds per turn for one worker
  * @property {boolean} [outdoors]   stops at night
+ * @property {boolean} [dayShift]   works indoors, but also stops at night
  * @property {'working'|'away'|'standing'} pose  how the renderer shows a worker on shift
  * @property {import('../systems/yields.js').YieldDef[]} [yields]
  * @property {{ id: string, label: string, required?: boolean }} [tool]  gear each worker uses: one per
@@ -108,12 +109,13 @@ export const ROLES = [
   {
     id: 'cook',
     label: 'cook',
-    hint: 'makes stew when there is a pot and the makings, else two rations from every cut of meat',
+    hint: 'cooks by day: stew when there is a pot and the makings, else two rations from every cut of meat',
     vacant: 'No one is cooking now.',
     max: 1,
     when: { built: ['rack'] },
     period: 10,
     pose: 'working',
+    dayShift: true,
     hasten: 'smoke',
     converts: [
       // Stew whenever there is a pot and the makings; plain cooked meat otherwise.

@@ -326,6 +326,6 @@ export function poseOf(person, phase) {
   if (person.sick) return 'sleeping';
   const role = ROLE_BY_ID[person.role];
   if (role?.guards) return 'standing';
-  if (phase === 'night') return role?.outdoors || !role ? 'sleeping' : role.pose;
+  if (phase === 'night') return !role || role.outdoors || role.dayShift ? 'sleeping' : role.pose;
   return role ? role.pose : 'sitting';
 }
