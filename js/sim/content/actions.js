@@ -124,6 +124,31 @@ const CAMP_ACTIONS = [
     ],
   },
   {
+    // Worth one ration more than cooking the meat and the forage apart, for a drink of water.
+    id: 'stew',
+    group: 'fire',
+    label: 'cook a stew',
+    hint: 'meat, forage and water in the pot: four rations, and a hot bowl for you',
+    cost: { meat: 1, forage: 2, water: 1 },
+    tools: ['pot'],
+    fills: 'rations',
+    cooldown: 6,
+    when: { known: ['pot'] },
+    gates: [NEEDS_FIRE],
+    effects: [
+      { grant: { rations: 4 } },
+      { vital: { warmth: 0.05 } },
+      { sfx: 'craft' },
+      {
+        log: [
+          'The pot simmers at the edge of the coals. Everyone finds a reason to sit nearby.',
+          'Meat, roots, a handful of something green. It thickens as it cooks.',
+          'You eat the first bowl standing up, too hot to taste. The rest goes into the stores.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'gather-wood',
     group: 'forage',
     label: 'gather wood',

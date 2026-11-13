@@ -44,6 +44,7 @@ export const RESOURCES = [
   { id: 'pack', label: 'pack', group: 'gear', cap: 1 },
   { id: 'coat', label: 'hide coat', group: 'gear', cap: 1 },
   { id: 'torch', label: 'torch', group: 'gear', cap: 3 },
+  { id: 'pot', label: 'cook pot', group: 'gear', cap: 1 },
 ];
 
 export const RESOURCE_BY_ID = indexById(RESOURCES);

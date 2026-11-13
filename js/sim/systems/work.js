@@ -30,7 +30,7 @@ function workTurn(sim, role, worker, workers) {
     if (animal?.worker) log(sim, fill(animal.worker, worker), 'good');
   }
   if (role.converts) {
-    const recipe = role.converts.find(({ from }) => canAfford(state, from));
+    const recipe = role.converts.find(({ from, when }) => canAfford(state, from) && meets(state, when));
     if (recipe) {
       pay(state, recipe.from);
       for (const [id, count] of Object.entries(recipe.to)) add(state, id, count);

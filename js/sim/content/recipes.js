@@ -59,6 +59,14 @@ export const RECIPES = [
     caps: { water: 4 },
   },
   {
+    id: 'pot',
+    label: 'fire a clay pot',
+    hint: 'for stew: meat, roots and water go further together',
+    cost: { stone: 4, wood: 3, fiber: 1 },
+    when: { built: ['workbench'] },
+    done: 'Creek clay, coiled and smoothed, baked in the coals overnight. It rings when you tap it.',
+  },
+  {
     id: 'torch',
     label: 'bind a torch',
     hint: 'light to carry into dark places',

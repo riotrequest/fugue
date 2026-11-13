@@ -26,7 +26,7 @@ const TOOL_JOBS = { axe: 'woodcutter', knife: 'trapper', spear: 'hunter', waters
 /** Things to build and make, most wanted first. */
 const PROJECTS = [
   'build-leanto', 'make-axe', 'make-knife', 'build-snares', 'build-rack', 'build-raincatcher', 'build-shed',
-  'build-workbench', 'make-spear', 'build-garden', 'build-cabin', 'make-waterskin', 'make-coat',
+  'build-workbench', 'make-pot', 'make-spear', 'build-garden', 'build-cabin', 'make-waterskin', 'make-coat',
   'make-pack', 'build-smokehouse', 'build-palisade', 'build-watchtower', 'build-radio',
 ];
 
@@ -116,6 +116,7 @@ export function createBot(game, style = 'settler') {
     if (style === 'walker' && attempt('leave')) return;
 
     // A cook gets twice as much from the same meat, so leave it for them.
+    if (!staffed('cook') && have('water') >= 3 && attempt('stew')) return;
     if (!staffed('cook') && attempt('cook')) return;
     if (style === 'seeker' && have('torch') < 2 && attempt('make-torch')) return;
     // Work tools: one for your own hands, then one per worker in the job that uses it.

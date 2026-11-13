@@ -19,7 +19,8 @@ import { indexById } from '../util.js';
  * @property {{ id: string, label: string, required?: boolean }} [tool]  gear each worker uses: one per
  *                                  worker speeds them up, or with `required`, no one takes the job without one
  * @property {string} [game]        a GAME_GROUNDS key: each turn tries for an animal
- * @property {{ from: Record<string, number>, to: Record<string, number> }[]} [converts]
+ * @property {{ from: Record<string, number>, to: Record<string, number>, when?: object }[]} [converts]
+ *                                  the first one affordable (and whose `when` holds) is made each turn
  * @property {string} [hasten]      camp bonus that speeds the role up
  * @property {boolean} [tends]
  * @property {boolean} [guards]
@@ -107,7 +108,7 @@ export const ROLES = [
   {
     id: 'cook',
     label: 'cook',
-    hint: 'gets two rations from every cut of meat',
+    hint: 'two rations from every cut of meat; with a pot and water to spare, stew makes more',
     vacant: 'No one is cooking now.',
     max: 1,
     when: { built: ['rack'] },
@@ -115,6 +116,8 @@ export const ROLES = [
     pose: 'working',
     hasten: 'smoke',
     converts: [
+      // Stew first, but never with the last of the water: the camp has to drink.
+      { from: { meat: 1, forage: 2, water: 1 }, to: { rations: 4 }, when: { has: { pot: 1, water: 3 } } },
       { from: { meat: 1 }, to: { rations: 2 } },
       { from: { forage: 2 }, to: { rations: 1 } },
     ],

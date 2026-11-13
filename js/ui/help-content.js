@@ -83,6 +83,7 @@ export const HELP_SECTIONS = [
       'Give people jobs with + and −. They work on their own. Hover a job to see what it does.',
       'Workers use one tool each: an axe per woodcutter, a spear per hunter. Make more as the camp grows.',
       'Raw meat feeds no one until a cook turns it into rations.',
+      'A clay pot turns meat, forage and water into stew: more rations than cooking them apart.',
       `Each one needs a meal and a drink every ${minutes(PEOPLE.upkeepSeconds)} minutes.`,
       'Hunger, thirst and cold make people sick, and the sick stop working. Good meals or medicine bring them back.',
       'At dawn, the weakest may leave. Their job flashes red.',
