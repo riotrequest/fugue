@@ -10,12 +10,13 @@ import { createEase, lerp } from '../util.js';
 /** Seconds for one weather to give way to another. */
 const WEATHER_TIME_CONSTANT = 2.5;
 
-const RAIN_LEVEL = 0.14;
+/** Halved from 0.14, with the patter, after playtesting: rain drowned out the night. */
+const RAIN_LEVEL = 0.07;
 const RAIN_HIGHPASS_HZ = 700;
 /** Heavier rain is brighter. */
 const RAIN_LOWPASS_HZ = [3200, 8500];
 /** Rain on the canopy: a low band beneath the hiss. */
-const PATTER_LEVEL = 0.3;
+const PATTER_LEVEL = 0.15;
 const PATTER_HZ = 340;
 const PATTER_Q = 0.8;
 
