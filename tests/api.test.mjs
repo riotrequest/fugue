@@ -27,7 +27,7 @@ function assertStatus(status) {
   assert.ok(['dawn', 'day', 'dusk', 'night'].includes(status.phase));
   assert.equal(status.clock, `Day ${status.day} · ${status.phase}`);
   assert.ok(['clear', 'rain', 'snow', 'fog', 'ash'].includes(status.weather));
-  assert.match(status.chapter, /^(I|II|III|IV|V) · \w+$/);
+  assert.match(status.chapter, /^\w+$/);
   assert.match(status.fireLabel, /^the fire is /);
   if (status.ended) assert.deepEqual(keysOf(status.ended), ['canContinue', 'id', 'text', 'title']);
 }
@@ -142,7 +142,7 @@ test('a new game opens asleep beside embers with a single action', () => {
   assert.equal(view.player, 'asleep');
   assert.equal(view.day, 1);
   assert.ok(view.fire > 0.05 && view.fire < 0.25, 'the fire is embers');
-  assert.equal(game.status().chapter, 'I · Subject');
+  assert.equal(game.status().chapter, 'Subject');
   assert.equal(game.status().ended, null);
   assert.equal(game.people(), null);
   assert.equal(game.event(), null);

@@ -27,7 +27,7 @@ import { weatherOf } from './systems/weather.js';
  * @property {string} clock         e.g. 'Day 3 · dusk'
  * @property {string} weather       weather id
  * @property {string} weatherLabel
- * @property {string} chapter       e.g. 'I · Subject'
+ * @property {string} chapter       e.g. 'Subject' (the log keeps the numeral)
  * @property {string} season        e.g. 'late autumn', 'deep winter, thaw in 3 days'
  * @property {string} difficulty    'easy' | 'normal' | 'hard'
  * @property {string} fireLabel     e.g. 'the fire is roaring'
@@ -112,7 +112,7 @@ export function status(state) {
     clock: `Day ${state.clock.day} · ${phase}`,
     weather: state.weather.id,
     weatherLabel: weatherOf(state).label,
-    chapter: CHAPTERS[state.chapter - 1],
+    chapter: CHAPTERS[state.chapter - 1].split(' · ').pop(),
     season: seasonOf(state),
     difficulty: dialOf(state).label,
     fireLabel: fireLabelOf(state),

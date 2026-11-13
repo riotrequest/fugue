@@ -51,8 +51,8 @@ test('the opening is paced: something new within half a minute, a stranger withi
     const { marks } = chronicle({ seed, style: 'settler', minutes: 30 });
     assert.ok(marks.secondAction <= 30, `first unlock at ${marks.secondAction}s`);
     assert.ok(marks.firstSurvivor >= 4 && marks.firstSurvivor <= 7, `first survivor at minute ${marks.firstSurvivor}`);
-    assert.ok(marks.chapters['III · Countersubject'] <= 12, 'the second voice follows');
-    assert.ok(marks.chapters['IV · Stretto'] >= 15, 'winter holds off long enough to prepare');
+    assert.ok(marks.chapters.Countersubject <= 12, 'the second voice follows');
+    assert.ok(marks.chapters.Stretto >= 15, 'winter holds off long enough to prepare');
   }
 });
 
