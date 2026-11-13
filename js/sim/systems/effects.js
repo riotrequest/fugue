@@ -12,6 +12,7 @@ import { openEvent } from './modal.js';
 import { addPerson, changeHealth, depart, forgive, reform } from './people.js';
 import { nudge } from './vitals.js';
 import { setWeather } from './weather.js';
+import { afterDeal } from './trade.js';
 import { GAME_GROUNDS } from '../content/game.js';
 import { catchGame, rollYields } from './yields.js';
 
@@ -32,6 +33,7 @@ import { catchGame, rollYields } from './yields.js';
  *   { vital: { id: delta } }             losing health counts as a wound
  *   { threat: level }
  *   { flag: 'id' }
+ *   { trader: dealId }                   after a trade: the trader stays while deals are left
  *   { chapter: n }                       only ever forward
  *   { wake: true }
  *   { build: 'structure' }
@@ -186,6 +188,8 @@ const OPS = {
   },
 
   next: (sim, op, ctx) => openEvent(sim, op.next, castOnly(ctx)),
+
+  trader: (sim, op, ctx) => afterDeal(sim, op.trader, ctx.offers),
 
   roll(sim, op, ctx) {
     applyEffects(sim, (sim.rng.chance(op.roll) ? op.pass : op.fail) ?? [], ctx);

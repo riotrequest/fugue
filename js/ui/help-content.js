@@ -88,6 +88,7 @@ export const HELP_SECTIONS = [
       'Hunger, thirst and cold make people sick, and the sick stop working. Good meals or medicine bring them back.',
       'At dawn, the weakest may leave. Their job flashes red.',
       'Each dawn the log tallies what the camp brought in and what it ate.',
+      'Every couple of days a trader comes by in daylight with a few deals: anything from cord to radio parts, for things you have plenty of. Trade as many as you like.',
       'Not everyone pulls their weight. Some work like two people, some barely work, and some steal. You find out in time.',
     ],
   },

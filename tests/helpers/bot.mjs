@@ -59,7 +59,9 @@ export function createBot(game, style = 'settler') {
   function resolve(event) {
     const open = event.choices.filter((choice) => choice.enabled);
     const pick = open.find((choice) => !RELUCTANT.has(choice.id)) ?? open[0];
-    const wanted = event.id === 'leave' ? open.find((choice) => choice.id === 'go') : pick;
+    // The bot never trades, so the playthroughs measure the game without the trader's help.
+    const wanted = event.id === 'leave' ? open.find((choice) => choice.id === 'go')
+      : event.id === 'trader' ? open.find((choice) => choice.id === 'part') : pick;
     game.choose((wanted ?? pick).id);
   }
 

@@ -172,6 +172,26 @@ export const DIRECTOR = {
   voiceGap: [55, 110],
 };
 
+/** The travelling trader (systems/trade.js). */
+export const TRADE = {
+  /** The first visit, on day 3; then one every couple of days, by daylight only. */
+  firstAt: 600,
+  gap: [380, 620],
+  chapter: 2,
+  /** Deals laid out on each visit. */
+  offers: 3,
+  /** What each deal is worth, in armfuls of wood. */
+  bundle: [6, 12],
+  /** The trader's cut. Scaled up on hard and down on easy with the yields dial. */
+  markup: 1.25,
+  /** Rough worth of each good, in armfuls of wood. Dearer goods are offered a little more often. */
+  worth: {
+    wood: 1, tinder: 2, stone: 1.5, fiber: 1.5, hide: 4,
+    water: 1, forage: 1.5, meat: 3, rations: 2.5,
+    scrap: 4, cloth: 4, wire: 6, medicine: 9, batteries: 8, parts: 9,
+  },
+};
+
 export const EXPEDITION = {
   /** Ordinary encounters per trip, before any memory scene. */
   encounters: 2,

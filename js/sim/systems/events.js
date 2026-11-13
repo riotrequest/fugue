@@ -18,7 +18,9 @@ import { sfx } from './journal.js';
  * @property {{ id: string, label: string, hint: string|null, enabled: boolean, reason: string|null }[]} choices
  */
 
-const offeredChoices = (state, def) => def.choices.filter((choice) => meets(state, choice.when));
+/** The event's own choices, after any made for this one occasion (a trader's deals). */
+const offeredChoices = (state, def, ctx = {}) =>
+  [...(ctx.offers ?? []), ...def.choices].filter((choice) => meets(state, choice.when));
 
 /** @returns {EventView|null} */
 export function describeEvent(state) {
@@ -33,7 +35,7 @@ export function describeEvent(state) {
     title: fill(prose.title, ctx),
     text: fill(paragraphs(prose.text), ctx),
     tone: def.tone ?? 'normal',
-    choices: offeredChoices(state, def).map((choice) => {
+    choices: offeredChoices(state, def, ctx).map((choice) => {
       const reason = lacking(state, choice.cost, choice.tools);
       return {
         id: choice.id,
@@ -55,7 +57,7 @@ export function choose(sim, choiceId) {
   const { state } = sim;
   if (!state.event || state.ended) return false;
   const { id, ctx } = state.event;
-  const choice = offeredChoices(state, EVENT_BY_ID[id]).find((candidate) => candidate.id === choiceId);
+  const choice = offeredChoices(state, EVENT_BY_ID[id], ctx).find((candidate) => candidate.id === choiceId);
   if (!choice || lacking(state, choice.cost, choice.tools) !== null) {
     sfx(sim, 'deny');
     return false;

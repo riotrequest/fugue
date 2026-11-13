@@ -7,6 +7,7 @@ import { intensityOf } from './fire.js';
 import { log, vary } from './journal.js';
 import { openEvent } from './modal.js';
 import { isAway, phaseOf } from './time.js';
+import { stepTrader } from './trade.js';
 
 /**
  * Pacing of everything that is not the player's doing: who finds the fire, what
@@ -88,4 +89,5 @@ export function stepDirector(sim) {
   talk(sim);
   if (!state.event) arrival(sim);
   if (!state.event) incident(sim);
+  if (!state.event) stepTrader(sim);
 }

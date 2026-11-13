@@ -1,5 +1,6 @@
 import { indexById } from '../util.js';
 import { ENCOUNTERS } from './encounters.js';
+import { TRADER_PARTING } from './trader.js';
 
 /**
  * Modal story events. While one is open the world waits for a choice.
@@ -54,6 +55,14 @@ const TURN_AWAY = {
 
 /** Events the story opens at fixed points. @type {EventDef[]} */
 const STORY_EVENTS = [
+  {
+    // The deals themselves are made fresh for each visit and carried in the event's ctx.offers.
+    id: 'trader',
+    title: 'A trader',
+    tone: 'good',
+    text: '{pitch}',
+    choices: [{ id: 'part', label: 'send them on their way', effects: [{ log: TRADER_PARTING }] }],
+  },
   {
     id: 'stranger',
     title: 'Someone at the edge',

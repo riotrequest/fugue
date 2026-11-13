@@ -1,4 +1,4 @@
-import { DIRECTOR, FIRE, PEOPLE, TIME, VITALS, WEATHER } from './tuning.js';
+import { DIRECTOR, FIRE, PEOPLE, TIME, TRADE, VITALS, WEATHER } from './tuning.js';
 import { OPENING_LINES } from './content/lines.js';
 
 /** Bump whenever the shape of GameState changes; older saves are then discarded. */
@@ -101,6 +101,7 @@ export function createState(seed, difficulty = 'normal') {
       voice: DIRECTOR.voiceGap[0],
       turnedAway: 0,
       theft: PEOPLE.theftGap[1],
+      trader: TRADE.firstAt,
     },
     log: OPENING_LINES.map((text) => ({ text, tone: 'normal', day: 1 })),
     ended: null,
