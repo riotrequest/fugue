@@ -16,7 +16,7 @@ export function createPause({ isPaused, canPause, onPauseToggle, saveFiles }) {
   const overlay = byId('pause');
   const resume = byId('pause-resume');
   const button = byId('btn-pause');
-  const files = saveFiles();
+  const files = saveFiles(false);
   byId('pause-actions').append(files.save, files.load, files.status);
   /** Everything under the veil. Made inert rather than hidden, so an open card survives the pause. */
   const covered = [byId('app'), byId('event'), byId('journal'), byId('help'), byId('survivor'), byId('notebook')];
@@ -41,7 +41,7 @@ export function createPause({ isPaused, canPause, onPauseToggle, saveFiles }) {
       if (paused === shown) return;
       shown = paused;
 
-      setText(button, paused ? 'resume' : 'pause');
+      setText(button, paused ? 'resume' : 'pause / save');
       button.setAttribute('aria-pressed', String(paused));
       overlay.hidden = !paused;
       if (paused) setText(files.status, '');
