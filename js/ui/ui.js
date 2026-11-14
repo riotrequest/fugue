@@ -6,6 +6,7 @@ import { createHelp } from './help.js';
 import { createSurvivors } from './survivors.js';
 import { createNotebook } from './notebook.js';
 import { createPause } from './pause.js';
+import { createSaveFiles } from './savefile.js';
 import { createPeople, createStores, createVitals } from './side.js';
 
 /** Clock, chapter, weather and the caption under the scene. */
@@ -74,6 +75,8 @@ function bindToolbar({ audio, onMuteChange, onRestart }) {
  *   onDifficulty: (id: string) => void,
  *   onBegin: () => void,
  *   onRestart: () => void,
+ *   hasGame: () => boolean,
+ *   onLoadSave: (save: object) => boolean,
  *   onMuteChange: (muted: boolean) => void,
  *   isPaused: () => boolean,
  *   canPause: () => boolean,
@@ -86,8 +89,8 @@ function bindToolbar({ audio, onMuteChange, onRestart }) {
 export function createUI(
   game,
   {
-    audio, hasSave, difficulty, onDifficulty, onBegin, onRestart, onMuteChange, isPaused, canPause, onPauseToggle,
-    helpSeen, onHelpSeen, onHelpChange,
+    audio, hasSave, difficulty, onDifficulty, onBegin, onRestart, hasGame, onLoadSave, onMuteChange, isPaused, canPause,
+    onPauseToggle, helpSeen, onHelpSeen, onHelpChange,
   },
 ) {
   const parts = [];
@@ -102,6 +105,7 @@ export function createUI(
   const survivors = createSurvivors(game, hooks);
   createLog(byId('log'), game);
   bindToolbar({ audio, onMuteChange, onRestart });
+  const saveFiles = createSaveFiles({ serialize: game.serialize, hasGame, onLoad: onLoadSave });
 
   parts.push(
     help,
@@ -118,9 +122,9 @@ export function createUI(
     ),
     createEventCard(game, hooks),
     createJournal(game, hooks),
-    createCurtain(game, { hasSave, difficulty, onDifficulty, onBegin, onRestart, onHelp: help.open }),
+    createCurtain(game, { hasSave, difficulty, onDifficulty, onBegin, onRestart, onHelp: help.open, saveFiles }),
     // Last, so its Escape handler runs after any overlay that claims the key.
-    createPause({ isPaused, canPause, onPauseToggle }),
+    createPause({ isPaused, canPause, onPauseToggle, saveFiles }),
   );
 
   refresh();

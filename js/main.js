@@ -60,6 +60,15 @@ const restart = () => {
   location.reload();
 };
 
+/** A save read from a file takes this game's place, and the page reloads into it. */
+const loadFromFile = (next) => {
+  if (!storage.writeSave(next)) return false;
+  // Stops pagehide from writing the old game back over the new one.
+  playing = false;
+  location.reload();
+  return true;
+};
+
 const canPause = () => playing && !game.status().ended;
 
 const setPaused = (next) => {
@@ -80,6 +89,9 @@ const ui = createUI(game, {
     audio.unlock();
   },
   onRestart: restart,
+  // Loading asks first only where there is a game to lose.
+  hasGame: () => playing || save != null,
+  onLoadSave: loadFromFile,
   onMuteChange: (muted) => storage.writeSettings({ ...storage.loadSettings(), muted }),
   isPaused: () => paused,
   canPause,

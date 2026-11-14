@@ -866,8 +866,12 @@ button {
 .difficulty__hint { margin-top: 6px; font-size: 16px; color: var(--muted); }
 .choice--quiet { border-color: transparent; background: none; color: var(--muted); }
 
+/* How a save to or load from a file went. Empty until then. */
+.savefile__status { min-height: 1.2em; font-size: 16px; color: var(--muted); }
+.savefile__status[data-tone='warn'] { color: var(--warn); }
+
 /* Above every other overlay: a pause can land on top of an open card. */
-.overlay--pause { z-index: 30; }
+.overlay--pause { z-index: 30; background: #05071ad9; }
 .overlay--pause .curtain { animation-duration: 0.35s; }
 .overlay--pause .curtain__title { font-size: 18px; letter-spacing: 6px; }
 .curtain__hint { margin-top: 14px; font-size: 16px; color: var(--faint); }

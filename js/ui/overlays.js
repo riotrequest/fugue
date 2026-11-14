@@ -140,9 +140,10 @@ export function createJournal(game, { isPaused }) {
  * @param {{
  *   hasSave: boolean, difficulty: string, onDifficulty: (id: string) => void,
  *   onBegin: () => void, onRestart: () => void, onHelp: () => void,
+ *   saveFiles: ReturnType<typeof import('./savefile.js').createSaveFiles>,
  * }} hooks
  */
-export function createCurtain(game, { hasSave, difficulty, onDifficulty, onBegin, onRestart, onHelp }) {
+export function createCurtain(game, { hasSave, difficulty, onDifficulty, onBegin, onRestart, onHelp, saveFiles }) {
   const overlay = byId('curtain');
   const panel = overlay.firstElementChild;
   const title = byId('curtain-title');
@@ -179,10 +180,15 @@ export function createCurtain(game, { hasSave, difficulty, onDifficulty, onBegin
       overlay.hidden = true;
       onBegin();
     });
+    // A saved game can be carried out as a file; any game can be replaced by one.
+    const files = saveFiles();
     actions.replaceChildren(
       begin,
       button('how to play', onHelp, true),
+      ...(hasSave ? [files.save] : []),
+      files.load,
       ...(hasSave ? [button('begin again', onRestart, true)] : []),
+      files.status,
     );
   };
 

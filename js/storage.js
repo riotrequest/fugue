@@ -16,18 +16,21 @@ function read(key) {
   }
 }
 
+/** @returns {boolean} whether it was stored */
 function write(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     // Storage full or unavailable: play continues, it just won't persist.
+    return false;
   }
 }
 
 /** @returns {object|null} */
 export const loadSave = () => read(SAVE_KEY);
 
-/** @param {object} save */
+/** @param {object} save @returns {boolean} */
 export const writeSave = (save) => write(SAVE_KEY, save);
 
 export function clearSave() {
