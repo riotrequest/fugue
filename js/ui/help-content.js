@@ -31,7 +31,7 @@ export const HELP_SECTIONS = [
       `Each night is longer and colder. Deep winter comes around day ${SEASON.deepWinterDay}, and the thaw around day ${SEASON.thawDay}. Hold on until spring.`,
       'Pick easy, normal or hard when you first wake. Hard means it.',
       'New actions, people and places appear as you find them.',
-      'The game saves itself. “begin again” wipes it. To keep a copy, or move it to another device, press “pause / save” and “save to a file”; “load from a file” brings it back.',
+      'The game saves itself. “begin again” wipes it. To keep a copy, or move it to another device, press “pause/save” and “save to a file”; “load from a file” brings it back.',
       'There is more than one way this ends.',
     ],
   },

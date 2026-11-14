@@ -41,7 +41,7 @@ export function createPause({ isPaused, canPause, onPauseToggle, saveFiles }) {
       if (paused === shown) return;
       shown = paused;
 
-      setText(button, paused ? 'resume' : 'pause / save');
+      setText(button, paused ? 'resume' : 'pause/save');
       button.setAttribute('aria-pressed', String(paused));
       overlay.hidden = !paused;
       if (paused) setText(files.status, '');
